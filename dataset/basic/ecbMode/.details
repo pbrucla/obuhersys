@@ -1,0 +1,3 @@
+Library - Node.js 
+CorrectedEcbMode - 'aes-256-gcm' configured securely with the 'gcm' mode of operation
+EcbMode1 - 'aes-256-ecb' configured insecurely with the 'ecb' mode of operation
