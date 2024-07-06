@@ -1,0 +1,4 @@
+Library - Node.js Cryto
+BrokenCryto1 - 'des' is an insecure algorithm
+BrokenCrypto2 - 'rc4' is an insecure algorithm
+CorrectedCrypto - 'aes-256-gcm' is a secure algorithm
