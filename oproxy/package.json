@@ -6,7 +6,8 @@
   "scripts": {
     "start": "echo todo implement",
     "dev": "tsx src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "build:watch": "tsc --watch"
   },
   "author": "PBR @ UCLA",
   "license": "MIT",
