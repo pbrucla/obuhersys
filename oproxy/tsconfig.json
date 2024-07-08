@@ -1,10 +1,9 @@
 {
   "compilerOptions": {
-    "lib": ["es2023"],
+    "lib": ["es2023", "ES2021.WeakRef"],
     "types": ["node"],
-    "target": "es2022",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "target": "es2023",
+    "module": "commonjs",
     "strict": true,
     "strictNullChecks": true,
     "esModuleInterop": true,
@@ -13,10 +12,10 @@
     "incremental": true,
     "resolveJsonModule": true,
     "isolatedModules": false,
-    "noEmit": true,
-    "allowImportingTsExtensions": true,
+    // "allowImportingTsExtensions": true,
     "importHelpers": true,
     "downlevelIteration": false,
+    "outDir": "./dist"
   },
-  "include": ["*.ts", "**/*.ts"]
+  "include": ["src/*.ts", "src/**/*.ts"]
 }
