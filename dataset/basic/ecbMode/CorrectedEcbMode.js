@@ -4,8 +4,8 @@ const crypto = require('crypto');
 async function main() {
     try {
         const algorithm = 'aes-256-gcm'; 
-        const key = cryto.randomBytes(32); // Generate a random key with 256 bits
-        const iv = cryto.randomBytes(12);
+        const key = crypto.randomBytes(32); // Generate a random key with 256 bits
+        const iv = crypto.randomBytes(12);
 
         const cipher = crypto.createCipheriv(algorithm, key, iv);
         const encrypted = cipher.update('some plaintext data', 'utf8', 'hex') + cipher.final('hex');

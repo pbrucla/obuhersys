@@ -1,4 +1,4 @@
-Library - Node.js Cryto
+Library - Node.js Crypto
 BrokenCryto1 - 'des' is an insecure algorithm
 BrokenCrypto2 - 'rc4' is an insecure algorithm
 BrokenCrypto3 - 'rc2' is an insecure algorithm
