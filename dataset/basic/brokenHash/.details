@@ -1,4 +1,4 @@
-Library - Node.js Cryto
+Library - Node.js Crypto
 BrokenHash1 - 'md5' is an insecure hash
 BrokenHash2 - 'SHA-1' is an insecure hash
 CorrectedHash - 'SHA-256' is a secure hash
