@@ -1,8 +1,7 @@
 {
   "name": "obuherseys-proxy",
   "version": "1.0.0",
-  "main": "dist/index.js",
-  "type": "module",
+  "main": "dist/dist/index.js",
   "scripts": {
     "start": "echo todo implement",
     "dev": "tsx src/index.ts",
@@ -21,5 +20,8 @@
     "tslib": "^2.6.3",
     "tsx": "^4.16.2",
     "typescript": "^5.5.3"
-  }
+  },
+  "files": [
+    "./dist/*"
+  ]
 }
