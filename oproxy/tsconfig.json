@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "lib": ["es2023", "ES2021.WeakRef"],
+    "lib": ["ESNext", "ES2021.WeakRef"],
     "types": ["node"],
-    "target": "es2023",
-    "module": "node16",
+    "target": "esnext",
+    "module": "NodeNext",
     "strict": true,
     "strictNullChecks": true,
     "esModuleInterop": true,
