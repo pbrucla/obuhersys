@@ -1,15 +1,20 @@
 const crypto = require('crypto');
 
-// 'aes-ecb' an insecure algorithm
+// a secure random function is correctly used as iv
 async function main() {
     try {
-        const algorithm = 'aes-256-ecb'; 
+        const algorithm = 'aes-256-gcm'; 
         const key = crypto.randomBytes(32); // Generate a random key with 256 bits
+        const iv = crypto.randomBytes(12);
 
-        const cipher = crypto.createCipheriv(algorithm, key, null);
+        const cipher = crypto.createCipheriv(algorithm, key, iv);
         const encrypted = cipher.update('some plaintext data', 'utf8', 'hex') + cipher.final('hex');
+
+        const tag = cipher.getAuthTag(); // Get the authentication tag
+
         
         console.log('Encrypted:', encrypted);
+        console.log('Authentication tag:', tag.toString('hex'));
         } catch (error) {
         console.error('Error:', error.message);
     }

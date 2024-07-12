@@ -1,0 +1,30 @@
+{
+  "name": "obuherseys-proxy",
+  "version": "1.0.0",
+  "main": "dist/dist/index.js",
+  "scripts": {
+    "start": "echo todo implement",
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "fmt": "prettier --cache --write ."
+  },
+  "author": "PBR @ UCLA",
+  "license": "MIT",
+  "description": "",
+  "packageManager": "pnpm@8.15.4+sha1.c85a4305534f76d461407b59277b954bac97b5c4",
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "prettier": "^2.8.8",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.6.3",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  },
+  "files": [
+    "./dist/*"
+  ],
+  "dependencies": {
+    "node": "^18.20.4"
+  }
+}

@@ -1,0 +1,5 @@
+
+Library - Node.js 
+CorrectedKeySize - 3072 secure buffer size
+SmallKeySize1 - 1024 insecure buffer size
+SmallKeySize2 - 512 insecure buffer size 
