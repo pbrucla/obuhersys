@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import ts from 'typescript';
 
 type Format = 'builtin' | 'commonjs' | 'dynamic' | 'json' | 'module' | 'wasm';
@@ -23,99 +24,61 @@ type LoadHook = (
 
 type GlobalPreloadHook = () => string;
 
+function getFunctionNames(sourceCode: string): string[] {
+  const sourceFile = ts.createSourceFile('temp.ts', sourceCode, ts.ScriptTarget.Latest, true);
+  const functionNames: string[] = [];
+
+  function visit(node: ts.Node) {
+    if (ts.isFunctionDeclaration(node) && node.name) {
+      functionNames.push(node.name.getText());
+    } else if (ts.isFunctionExpression(node) || ts.isArrowFunction(node)) {
+      if (node.parent && ts.isVariableDeclaration(node.parent) && node.parent.name) {
+        functionNames.push(node.parent.name.getText());
+      } else if (node.parent && ts.isPropertyAssignment(node.parent) && ts.isIdentifier(node.parent.name)) {
+        functionNames.push(node.parent.name.getText());
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return functionNames;
+}
+
 export const load: LoadHook = async function (url, context, nextLoad) {
+  console.log(`Loading URL: ${url}`);
   const r = await nextLoad(url, context);
-  // if (context.format === "module" && r.source) {
-  //   r.source = compile(config.wrapperName, r.source.toString());
-  // }
+
+  if (!r.source && url.startsWith('file://')) {
+    const filePath = urlToPath(url);
+    console.log("\n");
+    console.log(filePath);
+    console.log("\n");
+    r.source = fs.readFileSync(filePath, 'utf-8');
+  }
+
+  if (r.source) {
+    try {
+      const sourceCode = r.source.toString();
+      console.log(`Source code for ${url}: \n${sourceCode}`);
+      const functionNames = getFunctionNames(sourceCode);
+      console.log('Function names:', functionNames.join(', '));
+    } catch (error) {
+      console.log("hio");
+      console.error('Error parsing or processing the TypeScript code:', error);
+    }
+  } else {
+    console.error('No source code found for URL:', url);
+  }
+
   return r;
 };
 
 export const globalPreload: GlobalPreloadHook = function () {
-  // const jsonConfig = JSON.stringify(config);
-  // const root = JSON.stringify(__dirname);
-  // return `globalThis.${config.wrapperName} = (${agent})(${root}, ${jsonConfig});`;
   return '';
 };
 
-
-function addFunctionLogging(source: string): string {
-  const sourceFile = ts.createSourceFile(
-    'tempFile.ts',
-    source,
-    ts.ScriptTarget.ESNext,
-    true,
-    ts.ScriptKind.TS
-  );
-
-  const printer = ts.createPrinter();
-  const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
-    const visit: ts.Visitor = (node) => {
-      if (ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node) || ts.isMethodDeclaration(node)) {
-        const functionName = node.name ? node.name.getText() : '<anonymous>';
-        const logStatement = ts.factory.createExpressionStatement(
-          ts.factory.createCallExpression(
-            ts.factory.createIdentifier('console.log'),
-            undefined,
-            [ts.factory.createStringLiteral(`Function name: ${functionName}`)]
-          )
-        );
-        
-        if (node.body && ts.isBlock(node.body)) {
-          const newStatements = ts.factory.createNodeArray([
-            logStatement,
-            ...node.body.statements
-          ]);
-          const newBody = ts.factory.updateBlock(node.body, newStatements);
-          if (ts.isFunctionDeclaration(node)) {
-            return ts.factory.updateFunctionDeclaration(
-              node,
-              node.modifiers,
-              node.asteriskToken,
-              node.name,
-              node.typeParameters,
-              node.parameters,
-              node.type,
-              newBody
-            );
-          } else if (ts.isFunctionExpression(node)) {
-            return ts.factory.updateFunctionExpression(
-              node,
-              node.modifiers,
-              node.asteriskToken,
-              node.name,
-              node.typeParameters,
-              node.parameters,
-              node.type,
-              newBody
-            );
-          } else if (ts.isMethodDeclaration(node)) {
-            return ts.factory.updateMethodDeclaration(
-              node,
-              node.decorators,
-              node.modifiers,
-              node.asteriskToken,
-              node.name,
-              node.questionToken,
-              node.typeParameters,
-              node.parameters,
-              node.type,
-              newBody
-            );
-          }
-        }
-      }
-      return ts.visitEachChild(node, visit, context);
-    };
-
-    return (node) => ts.visitNode(node, visit);
-  };
-
-  const result = ts.transform(sourceFile, [transformer]);
-  const transformedSourceFile = result.transformed[0];
-
-  const transformedSource = printer.printFile(transformedSourceFile);
-  result.dispose();
-
-  return transformedSource;
+function urlToPath(url: string): string {
+  const fileUrl = new URL(url);
+  return path.normalize(fileUrl.pathname);
 }
