@@ -1,0 +1,3 @@
+Library - Node.js Crypto
+EcbMode1 - The algo variables are set to an insecure mode 'ecb' and a secure mode 'gcm', respectively, but only the secure mode is used in the cipher.
+

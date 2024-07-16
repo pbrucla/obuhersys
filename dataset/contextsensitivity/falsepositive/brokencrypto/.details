@@ -1,0 +1,3 @@
+Library - Node.js Crypto
+BrokenCrypto1 - The algo variables are set to an insecure 'des' and a secure cipher 'aes-256-gcm', respectively, but only the secure cipher is used to generate the cipher object.
+
