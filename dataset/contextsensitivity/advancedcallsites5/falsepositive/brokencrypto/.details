@@ -1,0 +1,2 @@
+Library - Node.js Crypto
+BrokenCrypto1 - Five different variables are set to names of different insecure and secure ciphers. One variable containing a secure algo is then used to initialize the cipher.

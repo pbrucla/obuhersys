@@ -1,0 +1,3 @@
+Library - Node.js Crypto
+pbkdf2Parameters1 - Five variables are set to statically or dynamically filled byte values. One variable containing random values is then used as the parameeter in the pbkdf2 function.
+

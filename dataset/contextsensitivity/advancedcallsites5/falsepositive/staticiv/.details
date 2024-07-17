@@ -1,0 +1,2 @@
+Library - Node.js Crypto
+StaticIv1.js - Five initialization vectors are intiialized, some randomly and some statically. A random, secure iv is then used to create the cipher.

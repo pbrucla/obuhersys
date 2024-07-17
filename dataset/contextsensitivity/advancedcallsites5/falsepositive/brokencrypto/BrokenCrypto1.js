@@ -1,10 +1,13 @@
 const crypto = require('crypto');
 
-// The algo variables are set to an insecure 'des' and a secure cipher 'aes-256-gcm', respectively. But only the latter one is utilized to initialize the cipher object.
+// Five different variables are set to names of different insecure and secure ciphers. One variable containing a secure algo is then used to initialize the cipher.
 async function main() {
     try {
         const algo1 = 'des'; 
-        const algo2 = 'aes-256-gcm'
+        const algo2 = 'aes-256-gcm';
+        const algo3 = 'md5';
+        const algo4 = 'sha1';
+        const algo5 = 'md2';
         const key = crypto.randomBytes(32);
         const iv = crypto.randomBytes(12);
         const cipher = crypto.createCipheriv(algo2, key, iv); // Generate a random key

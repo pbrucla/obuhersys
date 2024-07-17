@@ -1,0 +1,2 @@
+Library - Node.js Crypto
+SmallKeySize1 - Five different keysize variables are stored in variables. One variable with a sufficient keysize is then used to generate a KeyPair.
