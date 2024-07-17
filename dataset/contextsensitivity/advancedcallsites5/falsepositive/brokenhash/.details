@@ -1,0 +1,2 @@
+Library - Node.js Crypto
+BrokenHash1 - Five variables are set to names of secure and insecure algorithms. One variable containing a secure algo is then used to initialize a hash.

@@ -1,14 +1,17 @@
 const crypto = require('crypto');
 
-// The algo variables are set to an insecure mode 'ecb' and a secure mode 'gcm', respectively, but only the secure mode is used in the cipher.
+// Five initialization vectors are intiialized, some randomly and some statically. A random, secure iv is then used to create the cipher.
 async function main() {
     try {
-        const algo1 = 'aes-256-ecb';
-        const algo2 = 'aes-256-gcm'; 
+        const algorithm = 'aes-256-gcm'; 
         const key = crypto.randomBytes(32); // Generate a random key with 256 bits
-        const iv = crypto.randomBytes(12);
+        const iv1 = Buffer.from('abcdefghijkl', 'utf8');
+        const iv2 = crypto.randomBytes(12);
+        const iv3 = Buffer.from('mnopqrstuvwx', 'utf8');
+        const iv4 = crypto.randomBytes(12);
+        const iv5 = Buffer.from('abcdefghixyz', 'utf8');
 
-        const cipher = crypto.createCipheriv(algo2, key, iv);
+        const cipher = crypto.createCipheriv(algorithm, key, iv2);
         const encrypted = cipher.update('some plaintext data', 'utf8', 'hex') + cipher.final('hex');
 
         const tag = cipher.getAuthTag(); // Get the authentication tag
