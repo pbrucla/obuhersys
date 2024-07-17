@@ -1,6 +1,5 @@
 import fs, { access } from 'node:fs';
-import cryptoProxy from './proxymodules/cryptoProxy.js';
-
+// import cryptoProxy from './proxymodules/cryptoProxy.js';
 
 type Format = 'builtin' | 'commonjs' | 'dynamic' | 'json' | 'module' | 'wasm';
 

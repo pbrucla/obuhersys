@@ -7,9 +7,8 @@
   "type": "module",
   "scripts": {
     "start": "node --import ./dist/index.js ./dist/playground2.js",
-    "dev": "tsx src/index.ts",
-    "build": "tsc",
-    "build:watch": "tsc --watch",
+    "build": "tsc --build",
+    "build:watch": "tsc --build --watch",
     "fmt": "prettier --cache --write ."
   },
   "devDependencies": {

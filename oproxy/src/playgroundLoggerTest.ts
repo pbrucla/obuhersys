@@ -11,7 +11,7 @@
 //   }
 // })(require);
 
-import * as crypto from 'node:crypto';
+import * as crypto from './proxymodules/cryptoLogProxy.js';
 // import crypto from 'node:crypto';
 import { Cipher } from 'node:crypto';
 
@@ -35,3 +35,4 @@ if (PULLTHELEVERKRONK) {
 }
 
 const decrypted: Buffer = Buffer.concat(chunks);
+console.log("Completed.");

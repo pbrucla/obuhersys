@@ -1,5 +1,6 @@
 import { Parser } from "acorn";
-import  * as walk from "acorn-walk";
+import * as walk from "acorn-walk"; 
+import * as astring from "astring";
 
 export async function initialize(data: any) {
   // Receives data from `register`.
@@ -58,6 +59,13 @@ export async function load(
   const r = await nextLoad(url, context);
 
   console.log(`loading module ${url}`);
+
+  if (new URL(url).pathname.split("/").at(-2) == "proxymodules") {
+    // Don't modify if it's the proxy module importing the original module, avoid circular import
+    r.format = "commonjs";
+    return r;
+  }
+
   // convert TypedArray to a ArrayBuffer
   if (
     r.source instanceof Int8Array ||
@@ -84,42 +92,53 @@ export async function load(
     ecmaVersion: "latest",
     sourceType: "module",
   });
-  console.log('r.source\n', ast);
+  // console.log('r.source\n', ast);
 
   walk.simple(ast, {
     // ImportDeclaration(node) {
     //   console.log(`found ImportDeclaration ${node.source.value}`)
     // // },
-
-    // ImportSpecifier(node) {
-    //   console.log(`found ImportSpecifier ${node}`)
-    // },
-    
-    // ImportDefaultSpecifier(node) {
-    //   console.log(`found ImportDefaultSpecifier ${node.local.name}`)
-    // },
-    
-    ImportNamespaceSpecifier(node) {
-      console.log(`found ImportNamespaceSpecifier ${node.local.name}`)
-      switch(node.local.name) {
+    ImportDeclaration(node) {
+      console.log(`found ImportDeclaration ${node.source.value}`)
+      switch(node.source.value) {
         case 'crypto':
         case 'node:crypto':
           console.log('found crypto import');
-          node.local.name = './proxymodules/cryptoProxy.js';
+          node.source.raw = JSON.stringify('./proxymodules/cryptoProxy.js');
           break;
         default:
           break;
       }
     },
 
+    ImportSpecifier(node) {
+      console.log(`found ImportSpecifier ${node.local.name}`)
+    },
+    
+    ImportDefaultSpecifier(node) {
+      console.log(`found ImportDefaultSpecifier ${node.local.name}`)
+    },
+    
+    // ImportNamespaceSpecifier(node) {
+    //   console.log(`found ImportNamespaceSpecifier ${node.local.name}`)
+    //   switch(node.local.name) {
+    //     case 'crypto':
+    //     case 'node:crypto':
+    //       console.log('found crypto import');
+    //       node.local.name = './proxymodules/cryptoProxy.js';
+    //       break;
+    //     default:
+    //       break;
+    //   }
+    // },
+
     // ImportExpression(node) {
     //   console.log(`found ImportExpression ${node.source}`)
     // }
   })
 
-  r.source = `
-  console.log('hi from hooks.ts');
-  ` + r.source;
+  r.source = astring.generate(ast);
+  console.log("patched r.source", r.source);
 
   return r;
 }

@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "types": ["node"],
+    "target": "esnext",
+    "module": "CommonJS",
+    "moduleDetection": "force",
+    "strict": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "importHelpers": true,
+    "downlevelIteration": false,
+    "rootDir": "src",
+    "outDir": "./dist"
+  },
+  "include": ["src/proxymodules/*.ts", "src/proxymodules/**/*.ts"],
+}
