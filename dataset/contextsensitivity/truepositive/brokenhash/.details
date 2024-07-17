@@ -1,0 +1,2 @@
+Library - Node.js Crypto
+BrokenHash - Insecure hash 'md5' and secure hash 'sha256' asigned to variables, but only insecure one is used for function

@@ -1,0 +1,4 @@
+Library - Node.js Crypto
+pbkdf2Parameters1 - Two diffreent byte arrays, one static (salt1) and one random (salt2) are initialized. The random salt (salt2) is then used for the pbkdf2 function.
+pbkdf2Parameters2 - Two different iterations counts, one too litte and thus insecure (iterations1) and one with a secure amount of iterations (iteration2) are initialized. The secure number of iterations (iterations2) is then used in the parameter for the pbkdf2 function.
+pbkdf2Parameters3 - Two different digest algorithms are initialized, one insecure (digest1) and one secure (digest2). The secure digest is then used as the parameter in the pbkdf2 function.
