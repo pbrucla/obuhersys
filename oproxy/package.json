@@ -6,7 +6,7 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "start": "node --import ./dist/index.js ./dist/playground2.js",
+    "start": "node --import ./dist/index.js ./dist/playgroundLoggerTest.js",
     "build": "tsc --build",
     "build:watch": "tsc --build --watch",
     "fmt": "prettier --cache --write ."
