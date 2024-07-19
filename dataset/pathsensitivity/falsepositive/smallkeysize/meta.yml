@@ -1,0 +1,3 @@
+- filename: SmallKeySize1.js
+  description: One path in the conditional initializes the key with size 3072 (secure) and the other initializes with key size 1024 (not secure). Only the 3072 key size path is reachable.
+  secure: yes
