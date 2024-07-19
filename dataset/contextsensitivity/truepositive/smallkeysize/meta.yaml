@@ -1,3 +1,3 @@
 - filename: SmallKeySize1.js
   description: two different buffer sizes assigned to variables, object1(1024) and object2(2048), insecure object1 buffer size used for function
-  secure: yes
+  secure: no
