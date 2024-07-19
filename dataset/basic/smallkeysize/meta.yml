@@ -1,0 +1,11 @@
+- filename: SmallKeySize1.js
+  description: 1024 insecure buffer size
+  secure: no
+
+- filename: SmallKeySize2.js
+  description: 512 insecure buffer size
+  secure: no
+
+- filename: CorrectedKeySize.js
+  description: 3072 secure buffer size
+  secure: yes
