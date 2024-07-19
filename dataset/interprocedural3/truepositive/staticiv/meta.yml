@@ -1,0 +1,5 @@
+- filename: StaticIv1.js
+  description: used static iv with aes-256
+  secure: no
+- filename: Correctediv.js
+  secure: yes
