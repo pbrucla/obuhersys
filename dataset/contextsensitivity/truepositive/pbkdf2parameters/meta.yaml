@@ -1,0 +1,6 @@
+- filename: pbkdf2parameters1.js
+  description: two different byte arrays assigned to variables, salt1(insecure) and salt2(secure), insecure array used
+  secure: no
+- filename: pbkdf2parameters2.js
+  description: two differing number of iterations, iterations1(1000) and iterations2(100000), smaller and insecure number of iterations used in function 
+  secure: no
