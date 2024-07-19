@@ -6,7 +6,7 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "start": "node --import ./dist/index.js ./dist/playgroundLoggerTest.js",
+    "start": "node --enable-source-maps --import ./dist/index.js ./dist/playgroundLoggerTest.js",
     "build": "tsc --build",
     "build:watch": "tsc --build --watch",
     "fmt": "prettier --cache --write ."
@@ -28,6 +28,7 @@
     "acorn": "^8.12.1",
     "acorn-walk": "^8.3.3",
     "estree-util-attach-comments": "^3.0.0",
-    "estree-util-to-js": "^2.0.0"
+    "estree-util-to-js": "^2.0.0",
+    "source-map": "^0.7.4"
   }
 }

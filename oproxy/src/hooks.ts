@@ -1,9 +1,10 @@
-import { Comment, Parser } from "acorn";
+import { Comment, Node as AcornNode, Parser, Program as AcornProgram } from "acorn";
 import * as walk from "acorn-walk"; 
 import { Program } from "estree";
 import { attachComments } from "estree-util-attach-comments";
 import { toJs } from "estree-util-to-js";
 import path from "node:path";
+import { SourceMapGenerator } from "source-map";
 import { fileURLToPath, pathToFileURL } from "url";
 
 const UNWRAP_NAMESPACE_PLS = "__obuhersys_unwrap_namespace_pls";
@@ -109,34 +110,9 @@ export async function load(
           break;
       }
       if (needsSpecifierFixup) {
-        const source = {
-          start: node.end,
-          end: node.end,
-          range: node.range,
-          loc: node.loc,
-        };
         const toUnwrap: string[] = [];
         walk.simple(node, specifierFixupVisitors, undefined, toUnwrap);
-        toUnwrap.forEach(unwrapped => {
-          ast.body.splice(
-            ast.body.findIndex(x => Object.is(x, node)) + 1,
-            0,
-            {
-              type: "VariableDeclaration",
-              kind: "const",
-              ...source,
-              declarations: [
-                {
-                  type: "VariableDeclarator",
-                  id: {
-                    type: "Identifier",
-                    name: unwrapped,
-                  }
-                }
-              ]
-            }
-          )
-        })
+        unwrapNamespaceImports(ast, node, toUnwrap);
       }
     },
 
@@ -145,8 +121,9 @@ export async function load(
     // }
   });
 
-  r.source = toJs(ast as Program).value;
-  console.log(`patched r.source:\n\n${r.source.split("\n").map(x => `    ${x}`).join("\n")}\n`);
+  let js = toJs(ast as Program, { filePath: url, SourceMapGenerator });
+  r.source = js.value + "\n//# sourceMappingURL=data:application/json;base64," + btoa(JSON.stringify(js.map));
+  console.log(`patched r.source:\n\n${js.value.split("\n").map(x => `    ${x}`).join("\n")}\n`);
 
   return r;
 }
@@ -159,4 +136,53 @@ function resolveProxy(module: string): string {
       module,
     )
   ).toString();
+}
+
+function unwrapNamespaceImports(ast: AcornProgram, after: AcornNode, toUnwrap: string[]) {
+  const source = {
+    start: after.start,
+    end: after.end,
+    range: after.range,
+    loc: after.loc,
+  };
+  const index = ast.body.findIndex(x => Object.is(x, after)) + 1;
+  console.log("inserting stuff at", index);
+  toUnwrap.forEach(unwrapped => {
+    ast.body.splice(
+      index,
+      0,
+      {
+        type: "VariableDeclaration",
+        kind: "const",
+        declarations: [
+          {
+            type: "VariableDeclarator",
+            id: {
+              type: "Identifier",
+              name: unwrapped,
+              ...source,
+            },
+            init: {
+              type: "MemberExpression",
+              object: {
+                type: "Identifier",
+                name: unwrapped + UNWRAP_NAMESPACE_PLS,
+                ...source,
+              },
+              property: {
+                type: "Identifier",
+                name: "default",
+                ...source,
+              },
+              computed: false,
+              optional: false,
+              ...source,
+            },
+            ...source,
+          }
+        ],
+        ...source,
+      }
+    )
+  })
 }

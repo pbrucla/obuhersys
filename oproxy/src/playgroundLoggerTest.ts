@@ -1,5 +1,5 @@
-// import * as crypto from 'node:crypto';
-import crypto from 'node:crypto';
+import * as crypto from 'node:crypto';
+// import crypto from 'node:crypto';
 import { Cipher } from 'node:crypto';
 // console.log(crypto);
 
