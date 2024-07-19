@@ -20,7 +20,15 @@
     "tsx": "^4.16.2",
     "typescript": "^5.5.3"
   },
+  "dependencies": {
+    "acorn": "^8.12.1",
+    "acorn-walk": "^8.3.3",
+    "estree-util-attach-comments": "^3.0.0",
+    "estree-util-to-js": "^2.0.0",
+    "source-map": "^0.7.4"
+  },
   "files": [
     "./dist/*"
-  ]
+  ],
+  "packageManager": "pnpm@9.5.0"
 }

@@ -8,9 +8,21 @@ importers:
 
   .:
     dependencies:
-      node:
-        specifier: ^18.20.4
-        version: 18.20.4
+      acorn:
+        specifier: ^8.12.1
+        version: 8.12.1
+      acorn-walk:
+        specifier: ^8.3.3
+        version: 8.3.3
+      estree-util-attach-comments:
+        specifier: ^3.0.0
+        version: 3.0.0
+      estree-util-to-js:
+        specifier: ^2.0.0
+        version: 2.0.0
+      source-map:
+        specifier: ^0.7.4
+        version: 0.7.4
     devDependencies:
       '@types/estree':
         specifier: ^1.0.5
@@ -254,14 +266,6 @@ packages:
   make-error@1.3.6:
     resolution: {integrity: sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==}
 
-  node-bin-setup@1.1.3:
-    resolution: {integrity: sha512-opgw9iSCAzT2+6wJOETCpeRYAQxSopqQ2z+N6BXwIMsQQ7Zj5M8MaafQY8JMlolRR6R1UXg2WmhKp0p9lSOivg==}
-
-  node@18.20.4:
-    resolution: {integrity: sha512-7kNnwQLq7hjLAKkku5Ig77yGmvFzriLwF83zg8BV13QEG3KGh5UGAT0O+TPK9N+AQbdf02LmFBXKbuGcHNfMLA==}
-    engines: {npm: '>=5.0.0'}
-    hasBin: true
-
   prettier@2.8.8:
     resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
     engines: {node: '>=10.13.0'}
@@ -471,12 +475,6 @@ snapshots:
       resolve-pkg-maps: 1.0.0
 
   make-error@1.3.6: {}
-
-  node-bin-setup@1.1.3: {}
-
-  node@18.20.4:
-    dependencies:
-      node-bin-setup: 1.1.3
 
   prettier@2.8.8: {}
 
