@@ -128,5 +128,5 @@ const cryptoProxy = {
   createDecipheriv: createDecipherivProxy,
 };
 
-module.exports = cryptoProxy;
-module.exports.default = cryptoProxy;
+module.exports["default"] = cryptoProxy;
+Object.keys(cryptoProxy).forEach(k => module.exports[k] = cryptoProxy[k]);

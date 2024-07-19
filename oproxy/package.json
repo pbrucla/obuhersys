@@ -12,6 +12,7 @@
     "fmt": "prettier --cache --write ."
   },
   "devDependencies": {
+    "@types/estree": "^1.0.5",
     "@types/node": "^20.14.10",
     "prettier": "^2.8.8",
     "ts-node": "^10.9.2",
@@ -22,10 +23,11 @@
   "files": [
     "./dist/*"
   ],
-  "packageManager": "pnpm@8.15.4+sha1.c85a4305534f76d461407b59277b954bac97b5c4",
+  "packageManager": "pnpm@9.5.0",
   "dependencies": {
     "acorn": "^8.12.1",
     "acorn-walk": "^8.3.3",
-    "astring": "^1.8.6"
+    "estree-util-attach-comments": "^3.0.0",
+    "estree-util-to-js": "^2.0.0"
   }
 }

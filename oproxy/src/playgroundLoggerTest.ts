@@ -11,7 +11,7 @@
 //   }
 // })(require);
 
-import * as crypto from './proxymodules/cryptoLogProxy.js';
+import * as crypto from 'node:crypto';
 // import crypto from 'node:crypto';
 import { Cipher } from 'node:crypto';
 

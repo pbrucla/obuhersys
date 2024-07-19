@@ -1,6 +1,9 @@
-import { Parser } from "acorn";
+import { Program } from "estree";
+import { Comment, Parser } from "acorn";
 import * as walk from "acorn-walk"; 
-import * as astring from "astring";
+import { attachComments } from "estree-util-attach-comments";
+import { toJs } from "estree-util-to-js";
+import path from "node:path";
 
 export async function initialize(data: any) {
   // Receives data from `register`.
@@ -58,12 +61,14 @@ export async function load(
   // Take a resolved URL and return the source code to be evaluated.
   const r = await nextLoad(url, context);
 
-  console.log(`loading module ${url}`);
-
+  
   if (new URL(url).pathname.split("/").at(-2) == "proxymodules") {
     // Don't modify if it's the proxy module importing the original module, avoid circular import
+    console.log(`loading proxy ${url}`);
     r.format = "commonjs";
     return r;
+  } else {
+    console.log(`loading module ${url}`);
   }
 
   // convert TypedArray to a ArrayBuffer
@@ -88,11 +93,15 @@ export async function load(
     r.source = new TextDecoder().decode(r.source);
   }
   
+  const comments: Comment[] = []
   const ast = Parser.parse(r.source, {
     ecmaVersion: "latest",
     sourceType: "module",
+    locations: true,
+    onComment: comments,
   });
-  // console.log('r.source\n', ast);
+  attachComments(ast as Program, comments);
+  // console.log('r.source\n', ast);x
 
   walk.simple(ast, {
     // ImportDeclaration(node) {
@@ -104,7 +113,12 @@ export async function load(
         case 'crypto':
         case 'node:crypto':
           console.log('found crypto import');
-          node.source.raw = JSON.stringify('./proxymodules/cryptoProxy.js');
+          node.source.raw = JSON.stringify(
+            path.resolve(
+              path.parse(new URL(import.meta.url).pathname).dir,
+              'proxymodules/cryptoProxy.js'
+            )
+          );
           break;
         default:
           break;
@@ -135,10 +149,10 @@ export async function load(
     // ImportExpression(node) {
     //   console.log(`found ImportExpression ${node.source}`)
     // }
-  })
+  });
 
-  r.source = astring.generate(ast);
-  console.log("patched r.source", r.source);
+  r.source = toJs(ast as Program).value;
+  console.log(`patched r.source:\n\n${r.source.split("\n").map(x => `    ${x}`).join("\n")}\n`);
 
   return r;
 }
