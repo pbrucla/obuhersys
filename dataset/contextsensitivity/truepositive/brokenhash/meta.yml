@@ -1,3 +1,0 @@
-- filename: BrokenHash.js
-  description: Insecure hash 'md5' and secure hash 'sha256' asigned to variables, but only insecure one is used
-  secure: no
