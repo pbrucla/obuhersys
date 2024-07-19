@@ -1,0 +1,3 @@
+- filename: EcbMode1.js
+  description: The algo variables are set to an insecure mode 'ecb' and a secure mode 'gcm', respectively, but only the insecure mode is used in the cipher.
+  secure: no
