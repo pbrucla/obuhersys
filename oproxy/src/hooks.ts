@@ -1,34 +1,16 @@
-import { Program } from "estree";
 import { Comment, Parser } from "acorn";
 import * as walk from "acorn-walk"; 
+import { Program } from "estree";
 import { attachComments } from "estree-util-attach-comments";
 import { toJs } from "estree-util-to-js";
 import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "url";
+
+const UNWRAP_NAMESPACE_PLS = "__obuhersys_unwrap_namespace_pls";
 
 export async function initialize(data: any) {
   // Receives data from `register`.
 }
-
-interface ResolveReturn {
-  format: string | null | undefined;
-  importAttributes: object | undefined;
-  shortCircuit: boolean | undefined;
-  url: string;
-}
-
-/*
-export async function resolve(
-  specifier: string,
-  context: {
-    conditions: string[];
-    importAttributes: object;
-    parentURL: string | undefined;
-  },
-  nextResolve: (specifier: string, context: object) => ResolveReturn
-): Promise<ResolveReturn> {
-  // Take an `import` or `require` specifier and resolve it to a URL.
-}
-*/
 
 interface LoadReturn {
   format: string;
@@ -61,14 +43,13 @@ export async function load(
   // Take a resolved URL and return the source code to be evaluated.
   const r = await nextLoad(url, context);
 
-  
   if (new URL(url).pathname.split("/").at(-2) == "proxymodules") {
     // Don't modify if it's the proxy module importing the original module, avoid circular import
-    console.log(`loading proxy ${url}`);
+    console.log(`loading proxy ${url}\n`);
     r.format = "commonjs";
     return r;
   } else {
-    console.log(`loading module ${url}`);
+    console.log(`loading module ${url}\n`);
   }
 
   // convert TypedArray to a ArrayBuffer
@@ -93,7 +74,7 @@ export async function load(
     r.source = new TextDecoder().decode(r.source);
   }
   
-  const comments: Comment[] = []
+  const comments: Comment[] = [];
   const ast = Parser.parse(r.source, {
     ecmaVersion: "latest",
     sourceType: "module",
@@ -101,50 +82,63 @@ export async function load(
     onComment: comments,
   });
   attachComments(ast as Program, comments);
-  // console.log('r.source\n', ast);x
+
+  const specifierFixupVisitors: walk.SimpleVisitors<string[]> = {
+    ImportDefaultSpecifier(node) {
+      console.log(`found ImportDefaultSpecifier ${node.local.name}`);
+    },
+    
+    ImportNamespaceSpecifier(node, state) {
+      console.log(`found ImportNamespaceSpecifier ${node.local.name}`);
+      state.push(node.local.name);
+      node.local.name += UNWRAP_NAMESPACE_PLS;
+    },
+  };
 
   walk.simple(ast, {
-    // ImportDeclaration(node) {
-    //   console.log(`found ImportDeclaration ${node.source.value}`)
-    // // },
     ImportDeclaration(node) {
-      console.log(`found ImportDeclaration ${node.source.value}`)
+      console.log(`found ImportDeclaration ${node.source.value}`);
+      let needsSpecifierFixup = true;
       switch(node.source.value) {
         case 'crypto':
         case 'node:crypto':
-          console.log('found crypto import');
-          node.source.raw = JSON.stringify(
-            path.resolve(
-              path.parse(new URL(import.meta.url).pathname).dir,
-              'proxymodules/cryptoProxy.js'
-            )
-          );
+          node.source.raw = JSON.stringify(resolveProxy("cryptoLogProxy.js"));
           break;
         default:
+          needsSpecifierFixup = false;
           break;
       }
+      if (needsSpecifierFixup) {
+        const source = {
+          start: node.end,
+          end: node.end,
+          range: node.range,
+          loc: node.loc,
+        };
+        const toUnwrap: string[] = [];
+        walk.simple(node, specifierFixupVisitors, undefined, toUnwrap);
+        toUnwrap.forEach(unwrapped => {
+          ast.body.splice(
+            ast.body.findIndex(x => Object.is(x, node)) + 1,
+            0,
+            {
+              type: "VariableDeclaration",
+              kind: "const",
+              ...source,
+              declarations: [
+                {
+                  type: "VariableDeclarator",
+                  id: {
+                    type: "Identifier",
+                    name: unwrapped,
+                  }
+                }
+              ]
+            }
+          )
+        })
+      }
     },
-
-    ImportSpecifier(node) {
-      console.log(`found ImportSpecifier ${node.local.name}`)
-    },
-    
-    ImportDefaultSpecifier(node) {
-      console.log(`found ImportDefaultSpecifier ${node.local.name}`)
-    },
-    
-    // ImportNamespaceSpecifier(node) {
-    //   console.log(`found ImportNamespaceSpecifier ${node.local.name}`)
-    //   switch(node.local.name) {
-    //     case 'crypto':
-    //     case 'node:crypto':
-    //       console.log('found crypto import');
-    //       node.local.name = './proxymodules/cryptoProxy.js';
-    //       break;
-    //     default:
-    //       break;
-    //   }
-    // },
 
     // ImportExpression(node) {
     //   console.log(`found ImportExpression ${node.source}`)
@@ -155,4 +149,14 @@ export async function load(
   console.log(`patched r.source:\n\n${r.source.split("\n").map(x => `    ${x}`).join("\n")}\n`);
 
   return r;
+}
+
+function resolveProxy(module: string): string {
+  return pathToFileURL(
+    path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      'proxymodules',
+      module,
+    )
+  ).toString();
 }
