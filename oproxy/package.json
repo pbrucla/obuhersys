@@ -22,12 +22,5 @@
   },
   "files": [
     "./dist/*"
-  ],
-  "packageManager": "pnpm@9.5.0",
-  "dependencies": {
-    "acorn": "^8.12.1",
-    "acorn-walk": "^8.3.3",
-    "estree-util-attach-comments": "^3.0.0",
-    "estree-util-to-js": "^2.0.0"
-  }
+  ]
 }
