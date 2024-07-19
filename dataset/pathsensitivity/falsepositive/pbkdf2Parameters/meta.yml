@@ -1,0 +1,8 @@
+- filename: pbkdf2Parameters1.js
+  description: One path in the conditional initializes a random salt; the other path makes it static. Only the path that initializes a random salt is reachable.
+  secure: yes
+
+
+- filename: pbkdf2Parameters2.js
+  description: One path in the conditional initializes the number of iterations to 1000000; the other path initializes it to 100, which is insecure. Only the path that initializes it to 1000000 is reachable.
+  secure: yes
