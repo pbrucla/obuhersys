@@ -1,0 +1,23 @@
+const { generateKeyPair, publicEncrypt, privateDecrypt} = require('crypto');
+const { promisify } = require('util');
+
+async function main() {
+  const size = 1024;
+  const data = Buffer.from('heyyy');
+  await fn1(data, size, generateKeyPair);
+}
+
+async function fn1(data, size, makePair) {
+  const keysize = size;
+  const dataString = data;
+  await fn2(keysize, dataString, makePair);
+}
+
+async function fn2(modulusLength, buffer, makePair) {
+  const { publicKey, privateKey } = await promisify(generateKeyPair)("rsa", { modulusLength: 2048 });
+  const public = publicEncrypt(publicKey, buffer);
+  const decrypt = privateDecrypt(privateKey, public);
+  console.log(decrypt.toString());
+}
+
+main();

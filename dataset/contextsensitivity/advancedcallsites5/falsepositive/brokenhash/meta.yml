@@ -1,0 +1,3 @@
+- filename: BrokenHash1.js
+  description: Five variables are set to names of secure and insecure algorithms. One variable containing a secure algo is then used to initialize a hash.
+  secure: yes

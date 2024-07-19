@@ -1,0 +1,15 @@
+- filename: pbkdf2Parameters1.js
+  description: static salt is insecure
+  secure: no
+
+- filename: pbkdf2Parameters2.js
+  description: too small numbers of iterations should be at least 10,0000
+  secure: no
+
+- filename: pbkdf2Parameters3.js
+  description: 'sha-1' insecure hashing algorithm
+  secure: no
+
+- filename: Correctedpbkdf2.js
+  description: pbkdf2 function called securely with random salt, large iteration count (>= 10000), and strong hashing algorithm
+  secure: yes

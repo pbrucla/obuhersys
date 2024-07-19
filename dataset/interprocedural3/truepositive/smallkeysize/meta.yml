@@ -1,0 +1,5 @@
+- filename: SmallKeySize1.js
+  description: small key
+  secure: no
+- filename: CorrectedKeySize.js
+  secure: yes

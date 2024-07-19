@@ -6,13 +6,16 @@ async function main() {
         const algo1 = 'aes-256-ecb';
         const algo2 = 'aes-256-gcm'; 
         const key = crypto.randomBytes(32); // Generate a random key with 256 bits
-        const iv = crypto.randomBytes(12);
+        const iv = null;
 
         const cipher = crypto.createCipheriv(algo1, key, iv);
+        const aad = Buffer.from('additional_authenticated_data', 'utf8');
+        cipher.setAAD(aad, { plaintextLength: 'some plaintext data'.length });
+
         const encrypted = cipher.update('some plaintext data', 'utf8', 'hex') + cipher.final('hex');
 
         const tag = cipher.getAuthTag(); // Get the authentication tag
-
+        
         
         console.log('Encrypted:', encrypted);
         console.log('Authentication tag:', tag.toString('hex'));
@@ -20,5 +23,7 @@ async function main() {
         console.error('Error:', error.message);
     }
 }
+
+
 
 main();

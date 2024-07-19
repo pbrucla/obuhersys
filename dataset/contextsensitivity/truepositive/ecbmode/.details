@@ -1,2 +1,0 @@
-Library - Node.js Crypto
-BrokenHash - Insecure mode  'ecb' and secure mode 'gcm' asigned to variables, but only insecure one is used for function

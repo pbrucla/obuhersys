@@ -5,8 +5,8 @@ const crypto = require('crypto');
 async function main() {
     try {
 
-        const object1 = { modulusLength: 1024 };
-        const object2 = { modulusLength: 3072 };
+        const object1 = Identity({ modulusLength: 1024 });
+        const object2 = Identity({ modulusLength: 3072 });
         const buffer = Buffer.from("whatever");
         const { publicKey, privateKey } = await util.promisify(crypto.generateKeyPair)("rsa", object2);
         const public = crypto.publicEncrypt(publicKey, buffer);
@@ -18,6 +18,10 @@ async function main() {
     } catch (error) {
         console.error('Error:', error.message);
     }   
+}
+
+function Identity(s) {
+    return s;
 }
 
 main();

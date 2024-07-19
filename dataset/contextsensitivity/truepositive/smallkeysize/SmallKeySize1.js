@@ -26,4 +26,7 @@ async function main() {
     }   
 }
 
+function Identity(s) {
+    return s;
+}
 main();

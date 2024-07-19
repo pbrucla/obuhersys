@@ -1,0 +1,19 @@
+- filename: BrokenCrypto1.js
+  description: 'des' is an insecure algorithm
+  secure: no
+
+- filename: BrokenCrypto2.js
+  description: 'rc4' is an insecure algorithm
+  secure: no
+
+- filename: BrokenCrypto3.js
+  description: 'rc2' is an insecure algorithm
+  secure: no
+
+- filename: BrokenCrypto4.js
+  description: 'Blowfish' is an insecure algorithm
+  secure: no
+
+- filename: CorrectedCrypto.js
+  description: 'aes-256-gcm' is a secure algorithm
+  secure: yes

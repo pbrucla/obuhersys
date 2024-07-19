@@ -1,0 +1,7 @@
+- filename: StaticIv1.js
+  description: a static value is used as initialization vector (iv) to initialize a cipher 'aes-256-gcm'
+  secure: no
+
+- filename: CorrectedStaticIv.js
+  description: a secure random function is correctly used as iv
+  secure: yes

@@ -1,0 +1,3 @@
+- filename: InsecureRandom1.js
+  description: math.random() for key (jebait)
+  secure: yes

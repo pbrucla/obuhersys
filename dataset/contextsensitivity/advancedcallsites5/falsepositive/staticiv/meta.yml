@@ -1,0 +1,3 @@
+- filename: StaticIv1.js
+  description: Five initialization vectors are intiialized, some randomly and some statically. A random, secure iv is then used to create the cipher.
+  secure: yes

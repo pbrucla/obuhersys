@@ -1,0 +1,3 @@
+- filename: BrokenHash1.js
+  description: uses md5 and function indirection to hash data (bait)
+  secure: yes
