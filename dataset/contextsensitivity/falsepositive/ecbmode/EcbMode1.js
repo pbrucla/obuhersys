@@ -3,8 +3,8 @@ const crypto = require('crypto');
 // The algo variables are set to an insecure mode 'ecb' and a secure mode 'gcm', respectively, but only the secure mode is used in the cipher.
 async function main() {
     try {
-        const algo1 = 'aes-256-ecb';
-        const algo2 = 'aes-256-gcm'; 
+        const algo1 = Identity('aes-256-ecb');
+        const algo2 = Identity('aes-256-gcm'); 
         const key = crypto.randomBytes(32); // Generate a random key with 256 bits
         const iv = crypto.randomBytes(12);
 
@@ -19,6 +19,10 @@ async function main() {
         } catch (error) {
         console.error('Error:', error.message);
     }
+}
+
+function Identity(s) {
+    return s;
 }
 
 main();
