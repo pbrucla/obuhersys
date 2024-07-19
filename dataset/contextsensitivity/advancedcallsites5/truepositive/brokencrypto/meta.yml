@@ -1,0 +1,3 @@
+- filename: BrokenCrypto1.js
+  description: Five different variables are set to names of different insecure and secure ciphers. One variable containing an insecure algo is then used to initialize the cipher
+  secure: no

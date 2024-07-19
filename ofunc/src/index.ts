@@ -24,47 +24,44 @@ type LoadHook = (
 
 type GlobalPreloadHook = () => string;
 
-function getFunctionNames(sourceCode: string): string[] {
+function getCalledMethods(sourceCode: string): string[] {
   const sourceFile = ts.createSourceFile('temp.ts', sourceCode, ts.ScriptTarget.Latest, true);
-  const functionNames: string[] = [];
+  const calledMethods: string[] = [];
 
   function visit(node: ts.Node) {
-    if (ts.isFunctionDeclaration(node) && node.name) {
-      functionNames.push(node.name.getText());
-    } else if (ts.isFunctionExpression(node) || ts.isArrowFunction(node)) {
-      if (node.parent && ts.isVariableDeclaration(node.parent) && node.parent.name) {
-        functionNames.push(node.parent.name.getText());
-      } else if (node.parent && ts.isPropertyAssignment(node.parent) && ts.isIdentifier(node.parent.name)) {
-        functionNames.push(node.parent.name.getText());
+    if (ts.isCallExpression(node)) {
+      const expression = node.expression;
+      if (ts.isPropertyAccessExpression(expression)) {
+        calledMethods.push(expression.getText());
       }
     }
     ts.forEachChild(node, visit);
   }
 
   visit(sourceFile);
-  return functionNames;
+  return calledMethods;
 }
 
 export const load: LoadHook = async function (url, context, nextLoad) {
   console.log(`Loading URL: ${url}`);
   const r = await nextLoad(url, context);
+  console.log("test1");
 
   if (!r.source && url.startsWith('file://')) {
     const filePath = urlToPath(url);
-    console.log("\n");
-    console.log(filePath);
-    console.log("\n");
+    console.log("test2");
     r.source = fs.readFileSync(filePath, 'utf-8');
   }
 
   if (r.source) {
     try {
       const sourceCode = r.source.toString();
-      console.log(`Source code for ${url}: \n${sourceCode}`);
-      const functionNames = getFunctionNames(sourceCode);
-      console.log('Function names:', functionNames.join(', '));
+
+      const calledMethods = getCalledMethods(sourceCode);
+      console.log("test3");
+
+      console.log('Called methods:', calledMethods.join(', '));
     } catch (error) {
-      console.log("hio");
       console.error('Error parsing or processing the TypeScript code:', error);
     }
   } else {
