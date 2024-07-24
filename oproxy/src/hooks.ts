@@ -1,13 +1,13 @@
-import { Comment, Node as AcornNode, Parser, Program as AcornProgram } from "acorn";
-import * as walk from "acorn-walk"; 
-import { Program } from "estree";
-import { attachComments } from "estree-util-attach-comments";
-import { toJs } from "estree-util-to-js";
-import path from "node:path";
-import { SourceMapGenerator } from "source-map";
-import { fileURLToPath, pathToFileURL } from "url";
+import { Comment, Node as AcornNode, Parser, Program as AcornProgram } from 'acorn';
+import * as walk from 'acorn-walk';
+import { Program } from 'estree';
+import { attachComments } from 'estree-util-attach-comments';
+import { toJs } from 'estree-util-to-js';
+import path from 'node:path';
+import { SourceMapGenerator } from 'source-map';
+import { fileURLToPath, pathToFileURL } from 'url';
 
-const UNWRAP_NAMESPACE_PLS = "__obuhersys_unwrap_namespace_pls";
+const UNWRAP_NAMESPACE_PLS = '__obuhersys_unwrap_namespace_pls';
 
 export async function initialize(data: any) {
   // Receives data from `register`.
@@ -44,10 +44,10 @@ export async function load(
   // Take a resolved URL and return the source code to be evaluated.
   const r = await nextLoad(url, context);
 
-  if (new URL(url).pathname.split("/").at(-2) == "proxymodules") {
+  if (new URL(url).pathname.split('/').at(-2) == 'proxymodules') {
     // Don't modify if it's the proxy module importing the original module, avoid circular import
     console.log(`loading proxy ${url}\n`);
-    r.format = "commonjs";
+    r.format = 'commonjs';
     return r;
   } else {
     console.log(`loading module ${url}\n`);
@@ -69,16 +69,16 @@ export async function load(
   ) {
     r.source = r.source.buffer;
   }
-  
+
   if (r.source instanceof ArrayBuffer) {
     // force r.source to be a string
     r.source = new TextDecoder().decode(r.source);
   }
-  
+
   const comments: Comment[] = [];
   const ast = Parser.parse(r.source, {
-    ecmaVersion: "latest",
-    sourceType: "module",
+    ecmaVersion: 'latest',
+    sourceType: 'module',
     locations: true,
     onComment: comments,
   });
@@ -88,7 +88,7 @@ export async function load(
     ImportDefaultSpecifier(node) {
       console.log(`found ImportDefaultSpecifier ${node.local.name}`);
     },
-    
+
     ImportNamespaceSpecifier(node, state) {
       console.log(`found ImportNamespaceSpecifier ${node.local.name}`);
       state.push(node.local.name);
@@ -100,10 +100,10 @@ export async function load(
     ImportDeclaration(node) {
       console.log(`found ImportDeclaration ${node.source.value}`);
       let needsSpecifierFixup = true;
-      switch(node.source.value) {
+      switch (node.source.value) {
         case 'crypto':
         case 'node:crypto':
-          node.source.raw = JSON.stringify(resolveProxy("cryptoLogProxy.js"));
+          node.source.raw = JSON.stringify(resolveProxy('cryptoLogProxy.js'));
           break;
         default:
           needsSpecifierFixup = false;
@@ -122,20 +122,19 @@ export async function load(
   });
 
   let js = toJs(ast as Program, { filePath: url, SourceMapGenerator });
-  r.source = js.value + "\n//# sourceMappingURL=data:application/json;base64," + btoa(JSON.stringify(js.map));
-  console.log(`patched r.source:\n\n${js.value.split("\n").map(x => `    ${x}`).join("\n")}\n`);
+  r.source = js.value + '\n//# sourceMappingURL=data:application/json;base64,' + btoa(JSON.stringify(js.map));
+  console.log(
+    `patched r.source:\n\n${js.value
+      .split('\n')
+      .map((x) => `    ${x}`)
+      .join('\n')}\n`
+  );
 
   return r;
 }
 
 function resolveProxy(module: string): string {
-  return pathToFileURL(
-    path.join(
-      path.dirname(fileURLToPath(import.meta.url)),
-      'proxymodules',
-      module,
-    )
-  ).toString();
+  return pathToFileURL(path.join(path.dirname(fileURLToPath(import.meta.url)), 'proxymodules', module)).toString();
 }
 
 function unwrapNamespaceImports(ast: AcornProgram, after: AcornNode, toUnwrap: string[]) {
@@ -145,44 +144,40 @@ function unwrapNamespaceImports(ast: AcornProgram, after: AcornNode, toUnwrap: s
     range: after.range,
     loc: after.loc,
   };
-  const index = ast.body.findIndex(x => Object.is(x, after)) + 1;
-  console.log("inserting stuff at", index);
-  toUnwrap.forEach(unwrapped => {
-    ast.body.splice(
-      index,
-      0,
-      {
-        type: "VariableDeclaration",
-        kind: "const",
-        declarations: [
-          {
-            type: "VariableDeclarator",
-            id: {
-              type: "Identifier",
-              name: unwrapped,
-              ...source,
-            },
-            init: {
-              type: "MemberExpression",
-              object: {
-                type: "Identifier",
-                name: unwrapped + UNWRAP_NAMESPACE_PLS,
-                ...source,
-              },
-              property: {
-                type: "Identifier",
-                name: "default",
-                ...source,
-              },
-              computed: false,
-              optional: false,
-              ...source,
-            },
+  const index = ast.body.findIndex((x) => Object.is(x, after)) + 1;
+  console.log('inserting stuff at', index);
+  toUnwrap.forEach((unwrapped) => {
+    ast.body.splice(index, 0, {
+      type: 'VariableDeclaration',
+      kind: 'const',
+      declarations: [
+        {
+          type: 'VariableDeclarator',
+          id: {
+            type: 'Identifier',
+            name: unwrapped,
             ...source,
-          }
-        ],
-        ...source,
-      }
-    )
-  })
+          },
+          init: {
+            type: 'MemberExpression',
+            object: {
+              type: 'Identifier',
+              name: unwrapped + UNWRAP_NAMESPACE_PLS,
+              ...source,
+            },
+            property: {
+              type: 'Identifier',
+              name: 'default',
+              ...source,
+            },
+            computed: false,
+            optional: false,
+            ...source,
+          },
+          ...source,
+        },
+      ],
+      ...source,
+    });
+  });
 }

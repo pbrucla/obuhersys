@@ -20,4 +20,4 @@ if (PULLTHELEVERKRONK) {
 }
 
 const decrypted: Buffer = Buffer.concat(chunks);
-console.log("decrypted: ", decrypted);
+console.log('decrypted: ', decrypted);

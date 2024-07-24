@@ -1,7 +1,4 @@
 {
   "files": [],
-  "references": [
-    {"path": "./tsconfig.main.json"},
-    {"path": "./tsconfig.proxymodules.json"}
-  ]
+  "references": [{ "path": "./tsconfig.main.json" }, { "path": "./tsconfig.proxymodules.json" }]
 }

@@ -46,10 +46,7 @@ const cipherHandler = {
 };
 
 // create a proxy for the createCipheriv function
-const createCipherivProxy = new Proxy(
-  crypto.createCipheriv.bind(crypto),
-  cipherHandler
-);
+const createCipherivProxy = new Proxy(crypto.createCipheriv.bind(crypto), cipherHandler);
 
 // create a cipher object that is actually our cipher proxy object
 const cipher: Cipher = createCipherivProxy('aes-256-gcm', key, iv);
