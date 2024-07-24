@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import ts from 'typescript';
+import ts, { factory } from 'typescript';
 
 type Format = 'builtin' | 'commonjs' | 'dynamic' | 'json' | 'module' | 'wasm';
 
@@ -24,15 +24,80 @@ type LoadHook = (
 
 type GlobalPreloadHook = () => string;
 
+const addLog = (callexpr: ts.CallExpression) => {
+  if (ts.isPropertyAccessExpression(callexpr.expression)) {
+    return __addLog(
+      [...callexpr.arguments],
+      callexpr.expression.expression,
+      callexpr.expression.name,
+      callexpr
+    );
+  }
+  return callexpr;
+};
+
+const __addLog = (args: ts.Expression[], obj: ts.Expression, prop: ts.Node, callexpr: ts.CallExpression) => factory.createCallExpression(
+  factory.createParenthesizedExpression(factory.createArrowFunction(
+    undefined,
+    undefined,
+    [],
+    undefined,
+    factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+    factory.createBlock(
+      [
+        factory.createVariableStatement(
+          undefined,
+          factory.createVariableDeclarationList(
+            [factory.createVariableDeclaration(
+              factory.createIdentifier("args"),
+              undefined,
+              undefined,
+              factory.createArrayLiteralExpression(
+                // [factory.createNumericLiteral("8")],
+                args,
+                false
+              )
+            )],
+            ts.NodeFlags.Const | ts.NodeFlags.Constant | ts.NodeFlags.Constant
+          )
+        ),
+        factory.createExpressionStatement(factory.createCallExpression(
+          factory.createIdentifier("log"),
+          undefined,
+          [
+            // factory.createIdentifier("crypto"),
+            obj,
+            // factory.createStringLiteral("randomBytes"),
+            factory.createStringLiteral(prop.getText()),
+            factory.createIdentifier("args")
+          ]
+        )),
+        factory.createReturnStatement(factory.updateCallExpression(
+          callexpr,
+          callexpr.expression,
+          callexpr.typeArguments, 
+          [factory.createSpreadElement(factory.createIdentifier("args"))]
+        ))
+      ],
+      false
+    )
+  )),
+  undefined,
+  []
+);
+
 function transformSourceFile(sourceFile: ts.SourceFile) {
   function visitor(node: ts.Node) {
     if (ts.isCallExpression(node)) {
-      return ts.factory.updateCallExpression(
-        node,
-        ts.factory.createIdentifier('foo'),
-        node.typeArguments,
-        node.arguments
-      );
+      // console.log('owo', node.expression.getText());
+      return [addLog(node)];
+      // return [node];
+      // return ts.factory.updateCallExpression(
+      //   node,
+      //   ts.factory.createIdentifier('foo'),
+      //   node.typeArguments,
+      //   node.arguments
+      // );
     }
     return ts.visitEachChild(node, visitor, undefined);
   }
@@ -53,6 +118,9 @@ const instrumentSource = (src: string): string => {
   );
 
   const result = transformSourceFile(sourceFile);
+  if (result === undefined) {
+    return src;
+  }
 
   const printer = ts.createPrinter();
   const newCode = printer.printNode(
@@ -84,6 +152,7 @@ export const load: LoadHook = async function (url, context, nextLoad) {
       console.log(newSource);
       console.log('------------');
       r.source = newSource;
+      r.shortCircuit = true;
     } catch (error) {
       console.error('Error parsing or processing the TypeScript code:', error);
     }
