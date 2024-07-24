@@ -36,57 +36,73 @@ const addLog = (callexpr: ts.CallExpression) => {
   return callexpr;
 };
 
-const __addLog = (args: ts.Expression[], obj: ts.Expression, prop: ts.Node, callexpr: ts.CallExpression) => factory.createCallExpression(
-  factory.createParenthesizedExpression(factory.createArrowFunction(
-    undefined,
-    undefined,
-    [],
-    undefined,
-    factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-    factory.createBlock(
-      [
-        factory.createVariableStatement(
-          [],
-          factory.createVariableDeclarationList(
-            [factory.createVariableDeclaration(
-              factory.createIdentifier("args"),
-              undefined,
-              undefined,
-              factory.createArrayLiteralExpression(
-                // [factory.createNumericLiteral("8")],
-                args,
-                false
-              )
-            )],
-            // ts.NodeFlags.Const | ts.NodeFlags.Constant | ts.NodeFlags.Constant
-            // above is not supported in new typescript version, use first argument
-            // of ModifierLike[] to change type of var
-          )
-        ),
-        factory.createExpressionStatement(factory.createCallExpression(
-          factory.createIdentifier("log"),
-          undefined,
+// below tree acquired from
+// https://ts-ast-viewer.com/#code/BTCUAIF4D5wb3AYwPYDsDOAXcBDATgObpTgDaAHALoDc4ANsgcIngJ4AOmyANOAOR4cqACbIAtgCFWmAKbo+vfEVC08MzAFc8qJG07IAdIJHips9MANWl6FeAC+oMNSA
+const __addLog = (
+  args: ts.Expression[],
+  obj: ts.Expression,
+  prop: ts.Node,
+  callexpr: ts.CallExpression
+) =>
+  factory.createCallExpression(
+    factory.createParenthesizedExpression(
+      factory.createArrowFunction(
+        undefined,
+        undefined,
+        [],
+        undefined,
+        factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+        factory.createBlock(
           [
-            // factory.createIdentifier("crypto"),
-            obj,
-            // factory.createStringLiteral("randomBytes"),
-            factory.createStringLiteral(prop.getText()),
-            factory.createIdentifier("args")
-          ]
-        )),
-        factory.createReturnStatement(factory.updateCallExpression(
-          callexpr,
-          callexpr.expression,
-          callexpr.typeArguments, 
-          [factory.createSpreadElement(factory.createIdentifier("args"))]
-        ))
-      ],
-      false
-    )
-  )),
-  undefined,
-  []
-);
+            factory.createVariableStatement(
+              [],
+              factory.createVariableDeclarationList(
+                [
+                  factory.createVariableDeclaration(
+                    factory.createIdentifier('args'),
+                    undefined,
+                    undefined,
+                    factory.createArrayLiteralExpression(
+                      // [factory.createNumericLiteral("8")],
+                      args,
+                      false
+                    )
+                  ),
+                ]
+                // ts.NodeFlags.Const | ts.NodeFlags.Constant | ts.NodeFlags.Constant
+                // above is not supported in new typescript version, use first argument
+                // of ModifierLike[] to change type of var
+              )
+            ),
+            factory.createExpressionStatement(
+              factory.createCallExpression(
+                factory.createIdentifier('log'),
+                undefined,
+                [
+                  // factory.createIdentifier("crypto"),
+                  obj,
+                  // factory.createStringLiteral("randomBytes"),
+                  factory.createStringLiteral(prop.getText()),
+                  factory.createIdentifier('args'),
+                ]
+              )
+            ),
+            factory.createReturnStatement(
+              factory.updateCallExpression(
+                callexpr,
+                callexpr.expression,
+                callexpr.typeArguments,
+                [factory.createSpreadElement(factory.createIdentifier('args'))]
+              )
+            ),
+          ],
+          false
+        )
+      )
+    ),
+    undefined,
+    []
+  );
 
 function transformSourceFile(sourceFile: ts.SourceFile) {
   function visitor(node: ts.Node) {
