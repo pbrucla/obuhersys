@@ -16,12 +16,19 @@ interface DecipherProxyObj {
 const finalCalledSymbol = Symbol('[[finalCalled]]');
 
 // insecure algs
-const INSECURE_SYMM_ENCRYPTION_FUNCS = ["RC2", "RC-2",
-                                      "RC4", "RC-4",
-                                      "RC5", "RC-5",
-                                      "DES", "DESede",
-                                      "Blowfish", "IDEA",
-                                      "3-KeyTripleDES"]
+const INSECURE_SYMM_ENCRYPTION_FUNCS = [
+  'RC2',
+  'RC-2',
+  'RC4',
+  'RC-4',
+  'RC5',
+  'RC-5',
+  'DES',
+  'DESede',
+  'Blowfish',
+  'IDEA',
+  '3-KeyTripleDES',
+];
 
 const createCipherivHandler = {
   //modify createCipheriv to return a proxy object that wraps the cipher object and tracks if final is called
@@ -44,11 +51,11 @@ const createCipherivHandler = {
     const cipherObjHandler = {
       get: function (target: any, prop: any, receiver: any) {
         // if calling final, set the finalCalledSymbol to true
-        switch(prop) {
-          case "final":
+        switch (prop) {
+          case 'final':
             target[finalCalledSymbol] = true;
             break;
-          // case: 
+          // case:
 
           default:
             break;
@@ -82,8 +89,8 @@ const createDecipherivHandler = {
         // if (prop === 'final') {
         //   target[finalCalledSymbol] = true;
         // }
-        switch(prop) {
-          case "final":
+        switch (prop) {
+          case 'final':
             target[finalCalledSymbol] = true;
             break;
           default:
@@ -102,10 +109,7 @@ const createDecipherivHandler = {
 };
 
 // create a proxy for the createDecipheriv function
-const createDecipherivProxy = new Proxy(
-  nodeCrypto.createDecipheriv.bind(nodeCrypto),
-  createDecipherivHandler
-);
+const createDecipherivProxy = new Proxy(nodeCrypto.createDecipheriv.bind(nodeCrypto), createDecipherivHandler);
 
 // crypto object with create decipher replaced with a proxy
 
@@ -128,5 +132,5 @@ const cryptoProxy = {
   createDecipheriv: createDecipherivProxy,
 };
 
-module.exports["default"] = cryptoProxy;
-Object.keys(cryptoProxy).forEach(k => module.exports[k] = cryptoProxy[k]);
+module.exports['default'] = cryptoProxy;
+Object.keys(cryptoProxy).forEach((k) => (module.exports[k] = cryptoProxy[k]));
