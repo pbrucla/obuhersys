@@ -1,12 +1,12 @@
-import * as crypto from "node:crypto";
-import { Cipher } from "node:crypto";
+import * as crypto from 'node:crypto';
+import { Cipher } from 'node:crypto';
 // import { FinalizationRegistry } from "node:util"
 
 // some random data
 const data: Buffer[] = [crypto.randomBytes(256)];
 
-const key = "potato".repeat(Math.ceil(32 / 6)).substring(0, 32);
-const iv = "beetroot";
+const key = 'potato'.repeat(Math.ceil(32 / 6)).substring(0, 32);
+const iv = 'beetroot';
 
 interface CipherObj {
   [finalCalledSymbol]?: boolean;
@@ -14,7 +14,7 @@ interface CipherObj {
 
 // Weakset of cipher objects created
 const createdCipherObjs: WeakRef<CipherObj>[] = [];
-const finalCalledSymbol = Symbol("[[finalCalled]]");
+const finalCalledSymbol = Symbol('[[finalCalled]]');
 
 const cipherHandler = {
   //modify createCipheriv to return a proxy object that wraps the cipher object and tracks if final is called
@@ -30,7 +30,7 @@ const cipherHandler = {
     const cipherObjHandler = {
       get: function (target: any, prop: any, receiver: any) {
         // if calling final, set the finalCalledSymbol to true
-        if (prop === "final") {
+        if (prop === 'final') {
           target[finalCalledSymbol] = true;
         }
         return Reflect.get(target, prop, receiver);
@@ -52,7 +52,7 @@ const createCipherivProxy = new Proxy(
 );
 
 // create a cipher object that is actually our cipher proxy object
-const cipher: Cipher = createCipherivProxy("aes-256-gcm", key, iv);
+const cipher: Cipher = createCipherivProxy('aes-256-gcm', key, iv);
 
 // const registry = new FinalizationRegistry((heldValue) => {
 //   console.log(`Cleanup for object ${heldValue}`);
@@ -73,15 +73,15 @@ if (PULLTHELEVERKRONK) {
 const decrypted: Buffer = Buffer.concat(chunks);
 
 // when program ends check if final was called on the cipher objects
-process.on("exit", () => {
+process.on('exit', () => {
   for (const ref of createdCipherObjs) {
     let obj = ref.deref();
-    if (obj !== undefined && typeof obj === "object") {
+    if (obj !== undefined && typeof obj === 'object') {
       if (!obj![finalCalledSymbol]) {
-        console.log("Final was never called");
-        throw new Error("Final was never called");
+        console.log('Final was never called');
+        throw new Error('Final was never called');
       } else {
-        console.log("Final was called yay :))))");
+        console.log('Final was called yay :))))');
       }
     }
   }
