@@ -46,7 +46,7 @@ const __addLog = (args: ts.Expression[], obj: ts.Expression, prop: ts.Node, call
     factory.createBlock(
       [
         factory.createVariableStatement(
-          undefined,
+          [],
           factory.createVariableDeclarationList(
             [factory.createVariableDeclaration(
               factory.createIdentifier("args"),
@@ -58,7 +58,9 @@ const __addLog = (args: ts.Expression[], obj: ts.Expression, prop: ts.Node, call
                 false
               )
             )],
-            ts.NodeFlags.Const | ts.NodeFlags.Constant | ts.NodeFlags.Constant
+            // ts.NodeFlags.Const | ts.NodeFlags.Constant | ts.NodeFlags.Constant
+            // above is not supported in new typescript version, use first argument
+            // of ModifierLike[] to change type of var
           )
         ),
         factory.createExpressionStatement(factory.createCallExpression(
@@ -99,6 +101,7 @@ function transformSourceFile(sourceFile: ts.SourceFile) {
       //   node.arguments
       // );
     }
+    console.log(node);
     return ts.visitEachChild(node, visitor, undefined);
   }
 
