@@ -1,8 +1,8 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import ts from 'typescript';
+import fs from "node:fs";
+import path from "node:path";
+import ts from "typescript";
 
-type Format = 'builtin' | 'commonjs' | 'dynamic' | 'json' | 'module' | 'wasm';
+type Format = "builtin" | "commonjs" | "dynamic" | "json" | "module" | "wasm";
 
 interface LoadContext {
   conditions: string[];
@@ -24,55 +24,74 @@ type LoadHook = (
 
 type GlobalPreloadHook = () => string;
 
-function getCalledMethods(sourceCode: string): string[] {
-  const sourceFile = ts.createSourceFile('temp.ts', sourceCode, ts.ScriptTarget.Latest, true);
-  const calledMethods: string[] = [];
-
-  function visit(node: ts.Node) {
+function transformSourceFile(sourceFile: ts.SourceFile) {
+  function visitor(node: ts.Node) {
     if (ts.isCallExpression(node)) {
-      const expression = node.expression;
-      if (ts.isPropertyAccessExpression(expression)) {
-        calledMethods.push(expression.getText());
-      }
+      return ts.factory.updateCallExpression(
+        node,
+        ts.factory.createIdentifier("foo"),
+        node.typeArguments,
+        node.arguments
+      );
     }
-    ts.forEachChild(node, visit);
+    return ts.visitEachChild(node, visitor, undefined);
   }
 
-  visit(sourceFile);
-  return calledMethods;
+  const context = {
+    factory: ts.factory,
+  };
+
+  return ts.visitNode(sourceFile, visitor);
 }
+
+const instrumentSource = (src: string): string => {
+  const sourceFile = ts.createSourceFile(
+    "temp.ts",
+    src,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  const result = transformSourceFile(sourceFile);
+
+  const printer = ts.createPrinter();
+  const newCode = printer.printFile(result);
+  return newCode;
+};
 
 export const load: LoadHook = async function (url, context, nextLoad) {
   console.log(`Loading URL: ${url}`);
   const r = await nextLoad(url, context);
   console.log("test1");
 
-  if (!r.source && url.startsWith('file://')) {
+  if (!r.source && url.startsWith("file://")) {
     const filePath = urlToPath(url);
     console.log("test2");
-    r.source = fs.readFileSync(filePath, 'utf-8');
+    r.source = fs.readFileSync(filePath, "utf-8");
   }
 
   if (r.source) {
     try {
       const sourceCode = r.source.toString();
 
-      const calledMethods = getCalledMethods(sourceCode);
-      console.log("test3");
-
-      console.log('Called methods:', calledMethods.join(', '));
+      // const calledMethods = getCalledMethods(sourceCode);
+      const newSource = instrumentSource(sourceCode);
+      console.log("start src---");
+      console.log(newSource);
+      console.log("------------");
+      r.source = newSource;
     } catch (error) {
-      console.error('Error parsing or processing the TypeScript code:', error);
+      console.error("Error parsing or processing the TypeScript code:", error);
     }
   } else {
-    console.error('No source code found for URL:', url);
+    console.error("No source code found for URL:", url);
   }
 
   return r;
 };
 
 export const globalPreload: GlobalPreloadHook = function () {
-  return '';
+  return "";
 };
 
 function urlToPath(url: string): string {
