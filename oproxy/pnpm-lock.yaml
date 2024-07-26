@@ -14,6 +14,9 @@ importers:
       acorn-walk:
         specifier: ^8.3.3
         version: 8.3.3
+      commander:
+        specifier: ^12.1.0
+        version: 12.1.0
       estree-util-attach-comments:
         specifier: ^3.0.0
         version: 3.0.0
@@ -237,6 +240,10 @@ packages:
     resolution: {integrity: sha512-ISvCdHdlTDlH5IpxQJIex7BWBywFWgjJSVdwst+/iQCoEYnyOaQ95+X1JGshuBjGp6nxKUy1jMgE3zPqN7fQdg==}
     hasBin: true
 
+  commander@12.1.0:
+    resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
+    engines: {node: '>=18'}
+
   create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
 
@@ -426,6 +433,8 @@ snapshots:
   arg@4.1.3: {}
 
   astring@1.8.6: {}
+
+  commander@12.1.0: {}
 
   create-require@1.1.1: {}
 

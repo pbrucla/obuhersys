@@ -1,12 +1,19 @@
+const fs = require('node:fs');
+const _crypto = require('node:crypto');
+const path = require('node:path');
+
 //==============================================================================
 
 // produces log file in current directory / wherever run start is called form
-const logFile = `./cryptoLog-${new Date().getTime()}.txt`;
+const logFile = `./logs/cryptoLog-${new Date().getTime()}.log`;
+const logFileResolved = path.resolve(logFile);
+
+console.error(`==== DAMN ${'='.repeat(logFileResolved.length + 1)}
+Logging to ${logFileResolved}
+${'='.repeat(logFileResolved.length + 11)}
+`);
 
 //==============================================================================
-
-const fs = require('fs');
-const _crypto = require('node:crypto');
 
 let idCount = 0;
 
@@ -31,7 +38,7 @@ function wrap<T>(objToTrack: T, id: number): T {
 function wrapConstructor<A extends any[], R, F extends (...args: A) => R>(target : string, constructor : F, cname : string) {
   return (...args : Parameters<F>) => {
     const id = idCount++;
-    logConstruct(cname, target, cname, args);
+    logConstruct(cname, id, target, cname, args);
     return wrap(constructor(...args), id);
   };
 }
@@ -51,20 +58,6 @@ function log(text: string) {
   fs.appendFileSync(logFile, text+"\n");
 }
 
-// function callToString(target: any, prop: any, args: any) {
-//   // convert to strings
-//   const targetString = String(target);
-//   const propString = String(prop);
-//   let argsString = '';
-//   if (args && Array.isArray(args)) {
-//     argsString = JSON.stringify(args).slice(1,-1);
-//   }
-
-//   const callString = `${targetString}.${propString}(${argsString})`;
-
-//   return callString;
-// }
-
 function logCall(id: number | null, target: any, prop: any, args: any) {
   // avoid logging node internals
   if (typeof prop === 'symbol') {
@@ -76,18 +69,18 @@ function logCall(id: number | null, target: any, prop: any, args: any) {
     return;
   }
 
-  const callObj = { id, target, prop, args };
+  const callObj = { type: "function", id, target, fn: prop, args };
 
-  log(`Function Call ${JSON.stringify(callObj)}`);
+  log(`${JSON.stringify(callObj)}`);
 }
 
 // Logs the construction of an object of name created with a function call made with given parameters
-function logConstruct(objName: string, target: any, prop: any, args: any) {
+function logConstruct(objName: string, id: number, target: any, prop: any, args: any) {
   // const callString = callToString(target, prop, args);
   // log(`${objName}=${callString}`);
 
-  const constructObj = { objName, target, prop, args };
-  log(`Constructor Call ${JSON.stringify(constructObj)}`);
+  const constructObj = { type: "constructor", objName, id, target, fn: prop, args };
+  log(`${JSON.stringify(constructObj)}`);
 }
 
 const cryptoProxy = new Proxy(_crypto, {
