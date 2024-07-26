@@ -17,7 +17,7 @@ ${'='.repeat(logFileResolved.length + 11)}
 
 let idCount = 0;
 
-function wrap<T>(objToTrack: T, id: number): T {
+function wrap<T>(objToTrack: T, id: number, cname: string): T {
   const handler = {
     get: function (target: any, prop: any, receiver: any) {
       let result = Reflect.get(target, prop, receiver);
@@ -32,6 +32,7 @@ function wrap<T>(objToTrack: T, id: number): T {
       return Reflect.get(target, prop, receiver);
     },
   };
+  (objToTrack as any)["__damn_src"] = cname;
   return new Proxy(objToTrack, handler);
 }
 
@@ -39,20 +40,21 @@ function wrapConstructor<A extends any[], R, F extends (...args: A) => R>(target
   return (...args : Parameters<F>) => {
     const id = idCount++;
     logConstruct(cname, id, target, cname, args);
-    return wrap(constructor(...args), id);
+    return wrap(constructor(...args), id, cname);
   };
 }
 
 
 const createCipheriv = wrapConstructor('crypto', _crypto.createCipheriv, 'createCipheriv');
 const creatDecipheriv = wrapConstructor('crypto', _crypto.createDecipheriv, 'createDecipheriv');
+const randomBytes = wrapConstructor('crypto', _crypto.randomBytes, 'randomBytes');
 
 const constructors: Record<string, any> = {
   'createCipheriv': createCipheriv,
   'createDecipheriv': creatDecipheriv,
+  // 'randomBytes': randomBytes,
 };
 
-//
 function log(text: string) {
   console.log(text);
   fs.appendFileSync(logFile, text+"\n");

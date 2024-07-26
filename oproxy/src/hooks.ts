@@ -7,7 +7,7 @@ import path from 'node:path';
 import { SourceMapGenerator } from 'source-map';
 import { fileURLToPath, pathToFileURL } from 'url';
 
-const UNWRAP_NAMESPACE_PLS = '__obuhersys_unwrap_namespace_pls';
+const UNWRAP_NAMESPACE_PLS = '__damn_unwrap_namespace_pls';
 
 export async function initialize(data: any) {
   // Receives data from `register`.
