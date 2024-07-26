@@ -1,0 +1,3 @@
+- filename: BrokenHash1.js
+  description: The algo members are set to a broken hash 'md5' and a secure hash 'sha256', but only the secure algo is used to create the hash.
+  secure: yes

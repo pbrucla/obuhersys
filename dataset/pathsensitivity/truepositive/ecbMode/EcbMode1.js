@@ -11,7 +11,7 @@ async function main() {
             cipher = crypto.createCipheriv(algorithm, key, null);
         }   
         else {
-            const algorithm = 'aes-256-ecb'; 
+            const algorithm = 'aes-256-ecb';  // insecure algorithm
             const key = crypto.randomBytes(32); // Generate a random key with 256 bits
             cipher = crypto.createCipheriv(algorithm, key, null);
         }

@@ -1,0 +1,3 @@
+- filename: BrokenHash1.js
+  description: One path in the conditional initializes the hash object with the insecure md4 algorithm; the other 3 paths initialize it with sha256 (secure), md5, and sha1. Only the md4 path is reachable.
+  secure: no
