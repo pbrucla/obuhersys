@@ -239,7 +239,11 @@ export const load: LoadHook = async function (url, context, nextLoad) {
 // i don't think common functions like require exist at
 // the stage this code runs so it's probably not worth
 export const globalPreload: GlobalPreloadHook = function () {
-  return '';
+  return `
+    globalThis['$obu_log'] = (obj, methodname, args) => {
+      // some code to log what was called
+    };
+    `
 };
 
 function urlToPath(url: string): string {
