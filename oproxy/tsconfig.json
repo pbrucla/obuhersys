@@ -1,22 +1,7 @@
 {
-  "compilerOptions": {
-    "lib": ["es2023", "ES2021.WeakRef"],
-    "types": ["node"],
-    "target": "es2023",
-    "module": "node16",
-    "strict": true,
-    "strictNullChecks": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "incremental": true,
-    "resolveJsonModule": true,
-    "isolatedModules": false,
-    "esModuleInterop": true,
-    // "allowImportingTsExtensions": true,
-    "importHelpers": true,
-    "downlevelIteration": false,
-    "outDir": "./dist"
-  },
-  "include": ["src/*.ts", "src/**/*.ts"]
+  "files": [],
+  "references": [
+    {"path": "./tsconfig.main.json"},
+    {"path": "./tsconfig.proxymodules.json"}
+  ]
 }

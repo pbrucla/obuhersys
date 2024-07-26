@@ -1,0 +1,3 @@
+- filename: SmallKeySize1.js
+  description: Names of a secure and an insecure keysize length (1024) are stored in an object's field by using the Identity function. The secure one is then used to finalize the keypair.
+  secure: yes

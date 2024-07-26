@@ -1,0 +1,2 @@
+Library - Node.js Crypto
+SmallKeySize1 - two different buffer sizes assigned to variables, object1(1024) and object2(2048), insecure object1 buffer size used for function
