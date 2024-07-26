@@ -19,5 +19,5 @@
     "outDir": "./dist"
   },
   "include": ["src/*.ts", "src/**/*.ts"],
-  "exclude": ["src/proxymodules/*.ts", "src/proxymodules/**/*.ts"],
+  "exclude": ["src/proxymodules/*.ts", "src/proxymodules/**/*.ts"]
 }

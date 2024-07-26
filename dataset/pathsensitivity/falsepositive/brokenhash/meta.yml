@@ -1,0 +1,3 @@
+- filename: BrokenHash1.js
+  description: One path in the conditional initializes the hash object with the insecure md5 algorithm; the other initializes it with the secure sha256 algorithm. Only the sha256 path is reachable.
+  secure: yes

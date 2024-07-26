@@ -1,0 +1,5 @@
+- filename: InsecureRandom1.js
+  description: math.random() for key
+  secure: no
+- filename: CorrectedRandom.js
+  secure: yes

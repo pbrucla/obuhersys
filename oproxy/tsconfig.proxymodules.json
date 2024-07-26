@@ -18,5 +18,5 @@
     "rootDir": "src",
     "outDir": "./dist"
   },
-  "include": ["src/proxymodules/*.ts", "src/proxymodules/**/*.ts"],
+  "include": ["src/proxymodules/*.ts", "src/proxymodules/**/*.ts"]
 }

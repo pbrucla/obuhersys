@@ -1,21 +1,7 @@
-// import cryptoProxy from './proxymodules/cryptoProxy';
-
-// globalThis.require = ((actualRequire) => {
-//   return (module) => {
-//     switch(module) {
-//       case 'crypto':
-//         return cryptoProxy;
-//       default:
-//         return actualRequire(module);
-//     }
-//   }
-// })(require);
-
 import * as crypto from 'node:crypto';
 // import crypto from 'node:crypto';
 import { Cipher } from 'node:crypto';
-
-console.log(crypto);
+// console.log(crypto);
 
 // some random data
 const data: Buffer[] = [crypto.randomBytes(256)];
@@ -35,4 +21,4 @@ if (PULLTHELEVERKRONK) {
 }
 
 const decrypted: Buffer = Buffer.concat(chunks);
-console.log("Completed.");
+console.log('Completed.');

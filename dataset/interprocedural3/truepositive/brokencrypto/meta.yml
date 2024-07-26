@@ -1,0 +1,6 @@
+- filename: BrokenCrypto1.js
+  description: des
+  secure: no
+- filename: CorrectedCrypto.js
+  description: des
+  secure: yes

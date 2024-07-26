@@ -1,119 +1,111 @@
-const checks = [
-  {
-    name: 'call .final()',
-    trigger: {
-      type: 'constructor',
-      lib: 'crypto',
-      fn: 'createDecipheriv',
-      args: ['aes-256-gcm']
-    },
-    implies: [
-      { type: 'call', method: 'final' }
-    ]
-  },
-  {
-    name: 'no insecure random',
-    trigger: {
-      type: 'constructor',
-      lib: 'crypto',
-      fn: 'createEncipheriv',
-      args: [{ type: 'wildcard' }, { type: 'random' }, { type: 'random' }]
-    }
-  }
-];
-
-const objectsToTrack = [
-  'crypto.createEncipheriv',
-  'crypto.createDecipheriv'
-]
 //==============================================================================
 
-const logFile = 'cryptoLog.txt';
+// produces log file in current directory / wherever run start is called form
+const logFile = `./cryptoLog-${new Date().getTime()}.txt`;
 
 //==============================================================================
 
 const fs = require('fs');
-const nodeCrypto = require("node:crypto");
+const _crypto = require('node:crypto');
 
-const createCipherivHandler = {
-  apply: function (target: any, thisArg: any, argumentsList: any) {
-    logCall('crypto', 'createCipheriv', argumentsList);
-    fs.appendFileSync(logFile, `createCipheriv(${argumentsList})\n`);
+let idCount = 0;
 
-    const cipherObj = target(...argumentsList);
-
-    //wrap the cipherObj in another Proxy that keeps track of if final is ever called
-    const cipherObjHandler = {
-      get: function (target: any, prop: any, receiver: any) {
-        //log function calls to output file
-        logCall('cipherObj', prop, argumentsList);
-        return Reflect.get(target, prop, receiver);
-      },
-    };
-
-    //create a proxy object that wraps the cipher object
-    const cipherProxy = new Proxy(cipherObj, cipherObjHandler);
-
-    //return the cipher proxy
-    return cipherProxy;
-  },
-};
-
-const createDecipherivHandler = {
-  apply: function (target: any, thisArg: any, argumentsList: any) {
-    logCall('crypto', 'createDecipheriv', argumentsList);
-    fs.appendFileSync(logFile, `createDecipheriv(${argumentsList})\n`);
-
-    const decipherObj = target(...argumentsList);
-
-    //wrap the decipherObj in another Proxy that keeps track of if final is ever called
-    const decipherObjHandler = {
-      get: function (target: any, prop: any, receiver: any) {
-        //log function calls to output file
-        logCall('decipherObj', prop, argumentsList);
-        return Reflect.get(target, prop, receiver);
-      },
-    };
-
-    //create a proxy object that wraps the decipher object
-    const decipherProxy = new Proxy(decipherObj, decipherObjHandler);
-
-    //return the decipher proxy
-    return decipherProxy;
-  },
-};
-
-function logCall(obj: any, prop: any, args: any) {
-  console.log(`${obj}.${prop}(${args})`);
-  fs.appendFileSync(logFile, `${obj}.${prop}(${args})\n`);
+function wrap<T>(objToTrack: T, id: number): T {
+  const handler = {
+    get: function (target: any, prop: any, receiver: any) {
+      let result = Reflect.get(target, prop, receiver);
+      //log function calls to output file
+      if (typeof result === 'function') {
+        return function (this: any, ...args: any[]) {
+          logCall(id, target, prop, args);
+          return result.apply(this, args);
+        };
+      }
+      logCall(id, target, prop, receiver);
+      return Reflect.get(target, prop, receiver);
+    },
+  };
+  return new Proxy(objToTrack, handler);
 }
 
-// const cryptoProxy = new Proxy(nodeCrypto, {
-//   get: function (target: any, prop: any, receiver: any) {
-//     if (prop === 'createCipheriv') {
-//       return new Proxy(target[prop], createCipherivHandler);
-//     } else if (prop === 'createDecipheriv') {
-//       return new Proxy(target[prop], createDecipherivHandler);
-//     } else {
-//       return Reflect.get(target, prop, receiver);
-//     }
-//   },
-// });
-
-
-const cryptoProxy = {
-  ...nodeCrypto,
-  createCipheriv: new Proxy(nodeCrypto.createCipheriv, createCipherivHandler),
-  createDecipheriv: new Proxy(nodeCrypto.createDecipheriv, createDecipherivHandler)
+function wrapConstructor<A extends any[], R, F extends (...args: A) => R>(target : string, constructor : F, cname : string) {
+  return (...args : Parameters<F>) => {
+    const id = idCount++;
+    logConstruct(cname, target, cname, args);
+    return wrap(constructor(...args), id);
+  };
 }
-cryptoProxy.default = cryptoProxy;
 
 
-const individualExports = { ...cryptoProxy };
+const createCipheriv = wrapConstructor('crypto', _crypto.createCipheriv, 'createCipheriv');
+const creatDecipheriv = wrapConstructor('crypto', _crypto.createDecipheriv, 'createDecipheriv');
 
-// Export individual properties
-Object.keys(individualExports).forEach(key => {
-  module.exports[key] = individualExports[key];
+const constructors: Record<string, any> = {
+  'createCipheriv': createCipheriv,
+  'createDecipheriv': creatDecipheriv,
+};
+
+//
+function log(text: string) {
+  console.log(text);
+  fs.appendFileSync(logFile, text+"\n");
+}
+
+// function callToString(target: any, prop: any, args: any) {
+//   // convert to strings
+//   const targetString = String(target);
+//   const propString = String(prop);
+//   let argsString = '';
+//   if (args && Array.isArray(args)) {
+//     argsString = JSON.stringify(args).slice(1,-1);
+//   }
+
+//   const callString = `${targetString}.${propString}(${argsString})`;
+
+//   return callString;
+// }
+
+function logCall(id: number | null, target: any, prop: any, args: any) {
+  // avoid logging node internals
+  if (typeof prop === 'symbol') {
+    return;
+  }
+
+  // avoid logging any toString related functions invoked by this logCall to avoid infinite loops
+  if (prop === 'toString' || prop === 'toJSON' || prop === 'valueOf') {
+    return;
+  }
+
+  const callObj = { id, target, prop, args };
+
+  log(`Function Call ${JSON.stringify(callObj)}`);
+}
+
+// Logs the construction of an object of name created with a function call made with given parameters
+function logConstruct(objName: string, target: any, prop: any, args: any) {
+  // const callString = callToString(target, prop, args);
+  // log(`${objName}=${callString}`);
+
+  const constructObj = { objName, target, prop, args };
+  log(`Constructor Call ${JSON.stringify(constructObj)}`);
+}
+
+const cryptoProxy = new Proxy(_crypto, {
+  get: function (target: any, prop: any, receiver: any) {
+    let result = Reflect.get(target, prop, receiver);
+    let handler = constructors[`${prop}`];
+    if (handler !== null && handler !== undefined) {
+      return handler;
+    } else if (typeof result === 'function') {
+      return function (this: any, ...args: any[]) {
+        logCall(null, 'crypto', prop, args);
+        return result.apply(this, args);
+      };
+    } else {
+      return Reflect.get(target, prop, receiver);
+    }
+  },
 });
 
-// module.exports.default = cryptoProxy;
+module.exports['default'] = cryptoProxy;
+Object.keys(cryptoProxy).forEach((k) => (module.exports[k] = cryptoProxy[k]));
