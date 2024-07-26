@@ -1,0 +1,3 @@
+- filename: StaticIv1.js
+  description: Three paths in the conditional initializes the iv with random bytes, whereas the other path generates a static iv, which is insecure. Only one of the paths that generates a random iv is reachable, so this code is secure.
+  secure: yes
