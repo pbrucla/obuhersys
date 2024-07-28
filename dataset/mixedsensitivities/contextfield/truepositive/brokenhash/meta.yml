@@ -1,0 +1,4 @@
+
+- filename: BrokenHash1.js
+  description: Names of a secure and an insecure hash algorithm (md5) are stored in an object's field by using the Identity function. The insecure one is then used to finalize the hash.
+  secure: no
