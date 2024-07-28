@@ -1,0 +1,4 @@
+
+- filename: SmallKeySize1.js
+  description: Initialized two key sizes, one insecure (1024 too small) and one secure (3072) and proceeded to use the insecure keylength to generate the key.
+  secure: no
