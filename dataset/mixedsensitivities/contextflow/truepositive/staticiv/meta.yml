@@ -1,0 +1,4 @@
+
+- filename: Staticlv1.js
+  description: Two initialization vectors are intiialized, one statially insecure (iv1) and one randomly secure (iv2). The random, secure iv is then used to create the cipher.
+  secure: no
