@@ -1,0 +1,4 @@
+Library - Node.js Crypto
+CorrectedStaticIv - a secure random function is correctly used as iv
+StaticIv1 - a static value is used as initialization vector (iv) to initialize a cipher 'aes-256-gcm'
+

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+testfile=$OBU_TESTFILE
+key=$OBU_KEY
+
+# mark as secure
+# >&2 echo $OBU_KEY yes
+
+# mark as insecure
+>&2 echo $OBU_KEY no

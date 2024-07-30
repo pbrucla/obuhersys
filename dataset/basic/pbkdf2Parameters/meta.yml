@@ -3,11 +3,11 @@
   secure: no
 
 - filename: pbkdf2Parameters2.js
-  description: too small numbers of iterations should be at least 10,0000
+  description: "too small numbers of iterations should be at least 10,0000"
   secure: no
 
 - filename: pbkdf2Parameters3.js
-  description: 'sha-1' insecure hashing algorithm
+  description: "'sha-1' insecure hashing algorithm"
   secure: no
 
 - filename: Correctedpbkdf2.js

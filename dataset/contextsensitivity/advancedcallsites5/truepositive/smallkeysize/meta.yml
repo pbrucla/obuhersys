@@ -1,3 +1,3 @@
-- filename: SmallKeySize.js
+- filename: SmallKeySize1.js
   description: Five different keysize variables are stored in variables. One variable with insufficient keysize is then used to generate a KeyPair.
   secure: no

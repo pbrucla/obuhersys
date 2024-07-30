@@ -1,8 +1,8 @@
 - filename: EcbMode1.js
-  description: 'aes-256-ecb' configured insecurely with the 'ecb' mode of operation
+  description: "'aes-256-ecb' configured insecurely with the 'ecb' mode of operation"
   secure: no
 
 - filename: CorrectedEcbMode.js
-  description: 'aes-256-gcm' configured securely with the 'gcm' mode of operation
+  description: "'aes-256-gcm' configured securely with the 'gcm' mode of operation"
   secure: yes
 

@@ -1,11 +1,11 @@
 - filename: BrokenHash1.js
-  description: 'md5' is an insecure hash
+  description: "'md5' is an insecure hash"
   secure: no
 
 - filename: BrokenHash2.js
-  description: 'SHA-1' is an insecure hash
+  description: "'SHA-1' is an insecure hash"
   secure: no
 
-- filename: CorrectedHash
-  description: 'SHA-256' is a secure hash
+- filename: CorrectedHash.js
+  description: "'SHA-256' is a secure hash"
   secure: yes

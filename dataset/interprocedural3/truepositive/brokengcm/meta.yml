@@ -1,0 +1,6 @@
+- filename: brokengcm.js
+  description: forgot to call final()
+  secure: no
+- filename: correctgcm.js
+  description: call final()
+  secure: yes
