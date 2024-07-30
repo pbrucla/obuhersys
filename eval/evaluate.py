@@ -1,11 +1,13 @@
-from pathlib import Path
-from argparse import ArgumentParser
-import yaml
 import os
+from argparse import ArgumentParser
+from pathlib import Path
+from subprocess import PIPE, Popen, TimeoutExpired
+
+import yaml
 from pydantic import BaseModel, Field
-from subprocess import Popen, PIPE, TimeoutExpired
 
 dataset = Path(__file__).parent.parent / "dataset"
+
 
 class TestCase(BaseModel):
     # filename of test file in same directory
@@ -17,9 +19,12 @@ class TestCase(BaseModel):
     # whether the test case is a secure api usage or not
     secure: bool
 
+
 def main():
     parser = ArgumentParser()
-    parser.add_argument("--fix", help="open editor/shell to fix broken yaml", action="store_true")
+    parser.add_argument(
+        "--fix", help="open editor/shell to fix broken yaml", action="store_true"
+    )
     parser.add_argument("--dry", help="dry run", action="store_true")
     parser.add_argument("testcmd", help="cmd used to test a file")
     args = parser.parse_args()
@@ -88,6 +93,7 @@ def main():
                 print(emote, test_file.relative_to(dataset))
 
     print(f"Passed {correct_count}/{total_count}")
+
 
 if __name__ == "__main__":
     main()

@@ -3,8 +3,8 @@
 testfile=$OBU_TESTFILE
 key=$OBU_KEY
 
-# mark as secure
+# mark as secure (to stderr)
 # >&2 echo $OBU_KEY yes
 
-# mark as insecure
+# mark as insecure (to stderr)
 >&2 echo $OBU_KEY no
