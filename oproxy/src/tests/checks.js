@@ -1,4 +1,4 @@
-[
+export const checks = [
   {
     name: "initial motivating example - authTag without .final() vuln",
     trigger: {

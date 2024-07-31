@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "start": "node --enable-source-maps --import ./dist/index.js ./dist/tests/playgroundLoggerTest.js",
-    "processLog": "node ./dist/log/index.js -c ./src/tests/checks.json",
+    "processLog": "node ./dist/log/index.js -c ./src/tests/checks.js",
     "build": "tsc --build --force",
     "build:watch": "tsc --build --watch",
     "fmt": "prettier --cache --write ."
