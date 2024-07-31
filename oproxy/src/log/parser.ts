@@ -3,6 +3,7 @@ import * as readline from 'node:readline';
 
 // Constructor Call {"objName":"createCipheriv","target":"crypto","prop":"createCipheriv","args":["aes-256-gcm","potatopotatopotatopotatopotatopo","beetroot"]}
 export interface ConstructorCall {
+  lineNum: number,
   type: 'constructor';
   objName: string;
   id: number;
@@ -13,6 +14,7 @@ export interface ConstructorCall {
 
 // Function Call {"id":0,"target":{"_decoder":null},"prop":"final","args":[]}
 export interface FunctionCall {
+  lineNum: number,
   type: 'function';
   id: number | null;
   target: any;
@@ -44,8 +46,9 @@ async function processLineByLine(filePath: string, verbose = false) {
     crlfDelay: Infinity,
   });
 
+  let lineNum: number = 0;
   for await (const line of rl) {
-    const call = JSON.parse(line) as ConstructorCall | FunctionCall;
+    const call = {...JSON.parse(line), lineNum} as ConstructorCall | FunctionCall;
     logEntries.push(call);
   }
 
