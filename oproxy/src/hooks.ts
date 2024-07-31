@@ -130,6 +130,18 @@ export async function load(
       .join('\n')}\n`
   );
   
+  // Handle require, by prepending code to edit require cache
+  const handleRequireCode = `
+    if ('crypto' in require.cache) {
+      const __damn_node_crypto_proxy = require(${JSON.stringify(resolveProxy('cryptoLogProxy.js'))});
+      require.cache["crypto"] = { id: 'crypto', path: 'stuff', exports: __damn_node_crypto_proxy, filename:'stuff.js', loaded: true, children: [], paths: []};
+    }
+  `;
+
+  r.source = handleRequireCode + r.source;
+  console.log(r.source);
+  
+  r.shortCircuit = true;
   return r;
 }
 
