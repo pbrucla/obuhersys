@@ -82,15 +82,15 @@ def main():
                 p.kill()
                 outs, errs = p.communicate(timeout=5)
 
-            for line in errs.decode().split("\n"):
-                if key not in line:
-                    continue
-                ret_secure = "yes" in line
-                correct = ret_secure == test_case.secure
-                correct_count += correct
-                total_count += 1
-                emote = "✅" if correct else "❌"
-                print(emote, test_file.relative_to(dataset))
+            ret_secure = any(
+                "yes" in line and key in line
+                for line in errs.decode().split("\n")
+            )
+            correct = ret_secure == test_case.secure
+            correct_count += correct
+            total_count += 1
+            emote = "✅" if correct else "❌"
+            print(emote, test_file.relative_to(dataset))
 
     print(f"Passed {correct_count}/{total_count}")
 
