@@ -4,6 +4,7 @@ import { Program } from 'estree';
 import { attachComments } from 'estree-util-attach-comments';
 import { toJs } from 'estree-util-to-js';
 import path from 'node:path';
+import fs from 'node:fs';
 import { SourceMapGenerator } from 'source-map';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -44,13 +45,23 @@ export async function load(
   // Take a resolved URL and return the source code to be evaluated.
   const r = await nextLoad(url, context);
 
+  if (!r.source && url.startsWith('file://')) {
+    const filePath = fileURLToPath(url);
+    r.source = fs.readFileSync(filePath, 'utf-8');
+  }
+
+  if (!r.source && url.startsWith('file://')) {
+    const filePath = fileURLToPath(url);
+    r.source = fs.readFileSync(filePath, 'utf-8');
+  }
+
   if (new URL(url).pathname.split('/').at(-2) === 'proxymodules') {
     // Don't modify if it's the proxy module importing the original module, avoid circular import
-    console.log(`loading proxy ${url}\n`);
+    // console.log(`loading proxy ${url}\n`);
     r.format = 'commonjs';
     return r;
   } else {
-    console.log(`loading module ${url}\n`);
+    // console.log(`loading module ${url}\n`);
   }
 
   // convert TypedArray to a ArrayBuffer
@@ -86,11 +97,11 @@ export async function load(
 
   const specifierFixupVisitors: walk.SimpleVisitors<string[]> = {
     ImportDefaultSpecifier(node) {
-      console.log(`found ImportDefaultSpecifier ${node.local.name}`);
+      // console.log(`found ImportDefaultSpecifier ${node.local.name}`);
     },
 
     ImportNamespaceSpecifier(node, state) {
-      console.log(`found ImportNamespaceSpecifier ${node.local.name}`);
+      // console.log(`found ImportNamespaceSpecifier ${node.local.name}`);
       state.push(node.local.name);
       node.local.name += UNWRAP_NAMESPACE_PLS;
     },
@@ -98,7 +109,7 @@ export async function load(
 
   walk.simple(ast, {
     ImportDeclaration(node) {
-      console.log(`found ImportDeclaration ${node.source.value}`);
+      // console.log(`found ImportDeclaration ${node.source.value}`);
       let needsSpecifierFixup = true;
       switch (node.source.value) {
         case 'crypto':
@@ -122,18 +133,19 @@ export async function load(
   });
 
   let js = toJs(ast as Program, { filePath: url, SourceMapGenerator });
-  r.source = js.value + '\n//# sourceMappingURL=data:application/json;base64,' + btoa(JSON.stringify(js.map));
-  console.log(
-    `patched r.source:\n\n${js.value
-      .split('\n')
-      .map((x) => `    ${x}`)
-      .join('\n')}\n`
-  );
+  // r.source = 
+  // r.source = js.value + '\n//# sourceMappingURL=data:application/json;base64,' + btoa(JSON.stringify(js.map));
+  // console.log(
+  //   `patched r.source:\n\n${js.value
+  //     .split('\n')
+  //     .map((x) => `    ${x}`)
+  //     .join('\n')}\n`
+  // );
   
   // Handle require, by prepending code to edit require cache
   const handleRequireCode = `
-    if (!require.cache) { require.cache = {} }
-    if ('crypto' in require.cache) {
+    require.cache ??= {};
+    if (!('crypto' in require.cache)) {
       const __damn_node_crypto_proxy = require(${JSON.stringify(resolveProxy('cryptoLogProxy.js'))});
       require.cache["crypto"] = { id: 'crypto', path: 'stuff', exports: __damn_node_crypto_proxy, filename:'stuff.js', loaded: true, children: [], paths: []};
     }
@@ -147,7 +159,8 @@ export async function load(
 }
 
 function resolveProxy(module: string): string {
-  return pathToFileURL(path.join(path.dirname(fileURLToPath(import.meta.url)), 'proxymodules', module)).toString();
+  const fileurl = pathToFileURL(path.join(path.dirname(fileURLToPath(import.meta.url)), 'proxymodules', module)).toString();
+  return fileurl.slice(7);
 }
 
 function unwrapNamespaceImports(ast: AcornProgram, after: AcornNode, toUnwrap: string[]) {
@@ -158,7 +171,7 @@ function unwrapNamespaceImports(ast: AcornProgram, after: AcornNode, toUnwrap: s
     loc: after.loc,
   };
   const index = ast.body.findIndex((x) => Object.is(x, after)) + 1;
-  console.log('inserting stuff at', index);
+  // console.log('inserting stuff at', index);
   toUnwrap.forEach((unwrapped) => {
     ast.body.splice(index, 0, {
       type: 'VariableDeclaration',
