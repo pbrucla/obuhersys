@@ -74,6 +74,9 @@ function processLogEntries(logEntries: LogEntry[]) {
   // map of static function calls by which module they are called from
   const staticFunctionCallsByModule: Record<string, StaticCall[]> = {};
 
+  // constructor calls by module
+  const constructorCallsByModule: Record<string, ConstructorCall[]> = {};
+
   logEntries.forEach((entry) => {
     // if entry is a constructor
     if (entry.type === 'constructor') {
@@ -84,6 +87,12 @@ function processLogEntries(logEntries: LogEntry[]) {
         functionCalls: [],
         args: entry.args,
       };
+
+      // add to constructor calls by module
+      if (!constructorCallsByModule[entry.target]) {
+        constructorCallsByModule[entry.target] = [];
+      }
+      constructorCallsByModule[entry.target].push(entry);
 
       // add to list of objects
       objects.push(obj);
@@ -112,7 +121,7 @@ function processLogEntries(logEntries: LogEntry[]) {
     }
   });
 
-  return { objects, objectTypes, staticFunctionCalls, staticFunctionCallsByModule };
+  return { objects, objectTypes, staticFunctionCalls, staticFunctionCallsByModule, constructorCallsByModule };
 }
 
 export async function processLog(filePath: string) {

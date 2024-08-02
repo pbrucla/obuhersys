@@ -48,6 +48,7 @@ type LogInfo = {
     objectTypes: Record<string, number[]>;
     staticFunctionCalls: StaticCall[];
     staticFunctionCallsByModule: Record<string, FunctionCall[]>;
+    constructorCallsByModule: Record<string, ConstructorCall[]>;
   }
 };
 
@@ -184,7 +185,7 @@ export async function main(filePath: string) {
   const logInfo : LogInfo = await processLog(filePath);
 
   const { logEntries } = logInfo;
-  const { objects, objectTypes, staticFunctionCalls, staticFunctionCallsByModule } = logInfo.results;
+  const { objects, objectTypes, staticFunctionCalls, staticFunctionCallsByModule, constructorCallsByModule } = logInfo.results;
 
   // Log out everything
   console.log(`Objects: ${objects.length}`);
@@ -195,8 +196,11 @@ export async function main(filePath: string) {
   console.log(staticFunctionCalls);
   console.log(`Static Function Calls by Module: ${Object.keys(staticFunctionCallsByModule).length}`);
   console.log(staticFunctionCallsByModule);
+  console.log(`Constructor Calls by Module: ${Object.keys(constructorCallsByModule).length}`);
+  console.log(constructorCallsByModule);
   console.log(`Log Entries: ${logEntries.length}`);
   console.log(logEntries);
+
 
   // Evaluate checks
   checks.forEach((check) => {
@@ -228,16 +232,16 @@ export async function main(filePath: string) {
  */
 
 function enforceCheck(check: APIMisuseCheck, logInfo: LogInfo) {
-  console.log(`ENFORCING ${check}`)
+  console.log(`ENFORCING ${JSON.stringify(check)}`)
   const { name, trigger, implies } = check;
   const { type } = trigger;
   const { logEntries } = logInfo;
-  const { objects, objectTypes, staticFunctionCalls, staticFunctionCallsByModule } = logInfo.results;
+  const { objects, objectTypes, staticFunctionCalls, staticFunctionCallsByModule, constructorCallsByModule } = logInfo.results;
   console.log(`TYPE : ${type}`);
   if (type === "constructor") {
     const cname = trigger.fn;
     console.log(`CNAME: ${cname}`)
-    staticFunctionCallsByModule[trigger.lib].forEach((fcall) => {
+    constructorCallsByModule[trigger.lib].forEach((fcall) => {
       console.log(`${fcall.fn}`)
       if(fcall.fn === cname) {
         console.log(`MATCH FOUND AT ${fcall.lineNum}`)
