@@ -249,16 +249,33 @@ function enforceCheck(check: APIMisuseCheck, logInfo: LogInfo) {
   const { type } = trigger;
   const { logEntries } = logInfo;
   const { objects, objectTypes, staticFunctionCalls, staticFunctionCallsByModule, constructorCallsByModule } = logInfo.results;
-  console.log(`TYPE : ${type}`);
   if (type === "constructor") {
     const cname = trigger.fn;
-    console.log(`CNAME: ${cname}`)
     constructorCallsByModule[trigger.lib]?.forEach((fcall) => {
       console.log(`${fcall.fn}`)
       if(fcall.fn === cname) {
         implies.forEach((rule) => {
           enforceRule(check, rule, fcall, fcall.lineNum, logInfo); 
         });
+      }
+    });
+  }
+  else if (type === "function") {
+    const { target, fn, args } = trigger;
+    const calls = staticFunctionCallsByModule[target];
+    calls?.forEach((fcall) => {
+      if(fcall.fn === fn && fcall.args.length === args.length) {
+        let valid = true;
+        args.forEach((arg, i) => {
+          if(fcall.args[i] !== arg) {
+            valid = false;
+          }
+        });
+        if(valid) {
+          implies.forEach((rule) => {
+            enforceRule(check, rule, fcall, fcall.lineNum, logInfo);
+          });
+        }
       }
     });
   }
@@ -282,7 +299,6 @@ function enforceRule(check: APIMisuseCheck, rule: any, fcall: LogEntry, lineNum:
 } 
 
 function validateArgs(check: APIMisuseCheck, rule: any, fcall: LogEntry, lineNum: number) {
-  console.log(`VALIDATING ARGS ${JSON.stringify(rule)}`);
   if( !rule.validate(fcall.args[rule.index]) ) {
     failCheck(check.name, lineNum);
   }
@@ -302,9 +318,7 @@ function validateArgs(check: APIMisuseCheck, rule: any, fcall: LogEntry, lineNum
 function mustCall(check: APIMisuseCheck, rule: any, fcall: LogEntry, lineNum: number, logInfo: LogInfo) {
   //get the object that matches the fcall
   const { objects } = logInfo.results;
-  const { functionCalls } = objects[fcall.id!]
-
-  console.log(`CHECKING ${rule}`);
+  const { functionCalls } = objects[fcall.id!]!;
 
   functionCalls.forEach( (method) => {
     if(method.lineNum > lineNum) {
