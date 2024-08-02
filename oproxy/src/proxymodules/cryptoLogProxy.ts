@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const _crypto = require('node:crypto');
 const path = require('node:path');
+const { promisify } = require('util');
 
 //==============================================================================
 
@@ -23,10 +24,14 @@ function wrap<T>(objToTrack: T, id: number, cname: string): T {
       let result = Reflect.get(target, prop, receiver);
       //log function calls to output file
       if (typeof result === 'function') {
-        return function (this: any, ...args: any[]) {
+        const ret = (...args: any[]) => {
           logCall(id, target, prop, args);
-          return result.apply(this, args);
+          
+          const res = result.apply(target, args);
+          return res;
         };
+        (ret as any)[promisify.custom] = promisify(result);
+        return ret;
       }
       logCall(id, target, prop, receiver);
       return Reflect.get(target, prop, receiver);
@@ -48,12 +53,19 @@ function wrapConstructor<A extends any[], R, F extends (...args: A) => R>(target
 const createCipheriv = wrapConstructor('crypto', _crypto.createCipheriv, 'createCipheriv');
 const creatDecipheriv = wrapConstructor('crypto', _crypto.createDecipheriv, 'createDecipheriv');
 const randomBytes = wrapConstructor('crypto', _crypto.randomBytes, 'randomBytes');
+const createHash = wrapConstructor('crypto', _crypto.createHash, 'createHash');
+// const generateKeyPair = wrapConstructor('crypto', _crypto.generateKeyPair, 'generateKeyPair');
+const pbkdf2 = wrapConstructor('crypto', _crypto.pbkdf2, 'pbkdf2');
 
 const constructors: Record<string, any> = {
   'createCipheriv': createCipheriv,
   'createDecipheriv': creatDecipheriv,
   // 'randomBytes': randomBytes,
+  'createHash': createHash,
+  'pbkdf2': pbkdf2,
+  // 'generateKeyPair': generateKeyPair,
 };
+
 
 function log(text: string) {
   console.log(text);
@@ -92,10 +104,15 @@ const cryptoProxy = new Proxy(_crypto, {
     if (handler !== null && handler !== undefined) {
       return handler;
     } else if (typeof result === 'function') {
-      return function (this: any, ...args: any[]) {
+      const ret = (...args: any[]) => {
         logCall(null, 'crypto', prop, args);
-        return result.apply(this, args);
+        
+        const res = result.apply(target, args);
+        return res;
       };
+      (ret as any)[promisify.custom] = promisify(result);
+      return ret;
+
     } else {
       return Reflect.get(target, prop, receiver);
     }

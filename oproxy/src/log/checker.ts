@@ -84,7 +84,7 @@ export const checks: APIMisuseCheck[] = [
     trigger: {
       type: "constructor",
       lib: "crypto",
-      fn: "createEncipheriv"
+      fn: "createCipheriv"
     },
     implies: [
       {
@@ -105,7 +105,7 @@ export const checks: APIMisuseCheck[] = [
       {
         type: "validateArg",
         index: 0,
-        validate: arg => !/md5|sha1/i.test(arg)
+        validate: arg => !/md4|md5|sha1/i.test(arg)
       }
     ]
   },
@@ -150,8 +150,8 @@ export const checks: APIMisuseCheck[] = [
   {
     name: "basic/smallkeysize",
     trigger: {
-      type: "constructor",
-      lib: "crypto",
+      type: "function",
+      target: "crypto",
       fn: "generateKeyPair",
       args: ["rsa"]
     },
@@ -166,8 +166,8 @@ export const checks: APIMisuseCheck[] = [
   {
     name: "basic/staticIV",
     trigger: {
-      type: "constructor",
-      lib: "crypto",
+      type: "function",
+      target: "crypto",
       fn: "generateKeyPair",
       args: ["rsa"]
     },
@@ -207,6 +207,18 @@ export async function main(filePath: string) {
     enforceCheck(check, logInfo);
     console.log(`Processed Check: ${check.name}`);
   })
+
+  console.error(`Failed Checks: ${checkFails.length}`);
+  checkFails.forEach((fail) => {
+    console.error(`Check Failed: ${fail.name} Line: ${fail.lineNum}`);
+  })
+
+  if(checkFails.length == 0) {
+    console.error(`${process.env.OBU_KEY} yes`);
+  }
+  else {
+    console.error(`${process.env.OBU_KEY} no`);
+  }
 }
 
 /**
@@ -241,10 +253,9 @@ function enforceCheck(check: APIMisuseCheck, logInfo: LogInfo) {
   if (type === "constructor") {
     const cname = trigger.fn;
     console.log(`CNAME: ${cname}`)
-    constructorCallsByModule[trigger.lib].forEach((fcall) => {
+    constructorCallsByModule[trigger.lib]?.forEach((fcall) => {
       console.log(`${fcall.fn}`)
       if(fcall.fn === cname) {
-        console.log(`MATCH FOUND AT ${fcall.lineNum}`)
         implies.forEach((rule) => {
           enforceRule(check, rule, fcall, fcall.lineNum, logInfo); 
         });
@@ -271,7 +282,8 @@ function enforceRule(check: APIMisuseCheck, rule: any, fcall: LogEntry, lineNum:
 } 
 
 function validateArgs(check: APIMisuseCheck, rule: any, fcall: LogEntry, lineNum: number) {
-  if( rule.validate(fcall.args[rule.index]) ) {
+  console.log(`VALIDATING ARGS ${JSON.stringify(rule)}`);
+  if( !rule.validate(fcall.args[rule.index]) ) {
     failCheck(check.name, lineNum);
   }
 }

@@ -71,7 +71,7 @@ export const checks = [
       fn: "pbkdf2"
     },
     implies: [
-      // Limitation unable to check if salt is static or random, static salt is insecure
+      // TODO:Limitation unable to check if salt is static or random, static salt is insecure
       {
         // too small numbers of iterations should be at least 10,000
         type: "validateArg",
