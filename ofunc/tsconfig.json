@@ -16,7 +16,8 @@
     // "allowImportingTsExtensions": true,
     "importHelpers": true,
     "downlevelIteration": false,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "inlineSourceMap": true
   },
   "include": ["src/*.ts", "src/**/*.ts"]
 }
