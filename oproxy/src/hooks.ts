@@ -44,7 +44,7 @@ export async function load(
   // Take a resolved URL and return the source code to be evaluated.
   const r = await nextLoad(url, context);
 
-  if (new URL(url).pathname.split('/').at(-2) == 'proxymodules') {
+  if (new URL(url).pathname.split('/').at(-2) === 'proxymodules') {
     // Don't modify if it's the proxy module importing the original module, avoid circular import
     console.log(`loading proxy ${url}\n`);
     r.format = 'commonjs';
@@ -132,6 +132,7 @@ export async function load(
   
   // Handle require, by prepending code to edit require cache
   const handleRequireCode = `
+    if (!require.cache) { require.cache = {} }
     if ('crypto' in require.cache) {
       const __damn_node_crypto_proxy = require(${JSON.stringify(resolveProxy('cryptoLogProxy.js'))});
       require.cache["crypto"] = { id: 'crypto', path: 'stuff', exports: __damn_node_crypto_proxy, filename:'stuff.js', loaded: true, children: [], paths: []};
@@ -140,8 +141,8 @@ export async function load(
 
   r.source = handleRequireCode + r.source;
   console.log(r.source);
-  
-  r.shortCircuit = true;
+
+  // r.shortCircuit = true;
   return r;
 }
 
