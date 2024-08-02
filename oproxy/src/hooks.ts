@@ -144,11 +144,20 @@ export async function load(
   
   // Handle require, by prepending code to edit require cache
   const handleRequireCode = `
-    require.cache ??= {};
-    if (!('crypto' in require.cache)) {
+    if (!globalThis.__realRequire) {
+      globalThis.__realRequire = require;
       const __damn_node_crypto_proxy = require(${JSON.stringify(resolveProxy('cryptoLogProxy.js'))});
-      require.cache["crypto"] = { id: 'crypto', path: 'stuff', exports: __damn_node_crypto_proxy, filename:'stuff.js', loaded: true, children: [], paths: []};
+      require = (p) => {
+        if (['crypto', 'node:crypto'].includes(p)) {
+          return __damn_node_crypto_proxy;
+        }
+        return __realRequire(p);
+      };
     }
+    // if (!('crypto' in require.cache)) {
+    //   const __damn_node_crypto_proxy = require(${JSON.stringify(resolveProxy('cryptoLogProxy.js'))});
+    //   require.cache["crypto"] = { id: 'crypto', path: 'stuff', exports: __damn_node_crypto_proxy, filename:'stuff.js', loaded: true, children: [], paths: []};
+    // }
   `;
 
   r.source = handleRequireCode + r.source;
