@@ -1,16 +1,15 @@
 import { program } from "commander";
-import fs from "node:fs/promises";
+import process from "node:process";
+import path from "node:path";
 
-import { main } from "./checker.js";
-import { checks } from "../tests/checks.js";
+import { APIMisuseCheck, main } from "./checker.js";
 
 program
     .name("DAMN Log Parser")
     .option("-c, --checks <file>")
     .argument("<log file>")
     .action(async (logFile, options) => {
-        // const checks = JSON.parse(await fs.readFile(options.checks, { encoding: "utf-8" }));
-        // await main(logFile, checks);
-        await main(logFile);
+        const checks = (await import(path.resolve(process.cwd(), options.checks)) as { default: APIMisuseCheck[] }).default;
+        await main(logFile, checks);
     })
     .parse();

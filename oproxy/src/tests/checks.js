@@ -1,4 +1,4 @@
-export const checks = [
+export default [
   {
     name: "initial motivating example - authTag without .final() vuln",
     trigger: {
@@ -23,7 +23,7 @@ export const checks = [
     trigger: {
       type: "constructor",
       lib: "crypto",
-      fn: "createEncipheriv"
+      fn: "createCipheriv"
     },
     implies: [
       {
@@ -44,7 +44,7 @@ export const checks = [
       {
         type: "validateArg",
         index: 0,
-        validate: arg => !/md5|sha1/i.test(arg)
+        validate: arg => !/md[45]|sha1/i.test(arg)
       }
     ]
   },
@@ -64,16 +64,16 @@ export const checks = [
     ]
   },
   {
-    name: "basic/pdkdf2Paramters",
+    name: "basic/pdkdf2Parameters",
     trigger: {
       type: "constructor",
       lib: "crypto",
       fn: "pbkdf2"
     },
     implies: [
-      // TODO:Limitation unable to check if salt is static or random, static salt is insecure
+      // Limitation Note: unable to check if salt is static or random, static salt is insecure
       {
-        // too small numbers of iterations should be at least 10,000
+        // minimum number of iterations should be at least 10,000
         type: "validateArg",
         index: 2,
         validate: arg => arg >= 10000
@@ -89,8 +89,8 @@ export const checks = [
   {
     name: "basic/smallkeysize",
     trigger: {
-      type: "constructor",
-      lib: "crypto",
+      type: "function",
+      target: "crypto",
       fn: "generateKeyPair",
       args: ["rsa"]
     },
@@ -98,23 +98,23 @@ export const checks = [
       {
         type: "validateArg",
         index: 1,
-        validate: arg => arg >= 2048
+        validate: arg => arg?.modulusLength >= 2048
       }
     ]
   },
   {
-    name: "basic/staticIV",
+    name: "basic/smallkeysize sync",
     trigger: {
-      type: "constructor",
-      lib: "crypto",
-      fn: "generateKeyPair",
+      type: "function",
+      target: "crypto",
+      fn: "generateKeyPairSync",
       args: ["rsa"]
     },
     implies: [
       {
         type: "validateArg",
         index: 1,
-        validate: arg => arg >= 2048
+        validate: arg => arg?.modulusLength >= 2048
       }
     ]
   }

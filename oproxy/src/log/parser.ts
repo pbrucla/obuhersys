@@ -106,19 +106,21 @@ function processLogEntries(logEntries: LogEntry[]) {
       objectTypes[entry.objName].push(entry.id);
     }
     // if entry is a function, add it to list of function calls for corresponding object
-    else if (entry.type === 'function' && entry.id !== null) {
-      entry = entry as FunctionCall;
-      const obj = objects[entry.id!];
-      obj.functionCalls.push(entry);
-    } else {
-      // static function call
-      staticFunctionCalls.push(entry as StaticCall);
+    else if (entry.type === 'function') {
+      if (entry.id !== null) {
+        entry = entry as FunctionCall;
+        const obj = objects[entry.id!];
+        obj.functionCalls.push(entry);
+      } else {
+        // static function call
+        staticFunctionCalls.push(entry as StaticCall);
 
-      // construct a map entry if it doesn't exist
-      if (!staticFunctionCallsByModule[entry.target]) {
-        staticFunctionCallsByModule[entry.target] = [];
+        if (!staticFunctionCallsByModule[entry.target]) {
+          staticFunctionCallsByModule[entry.target] = [];
+        }
+        staticFunctionCallsByModule[entry.target].push(entry as StaticCall);
       }
-    }
+    } 
   });
 
   return { objects, objectTypes, staticFunctionCalls, staticFunctionCallsByModule, constructorCallsByModule };
