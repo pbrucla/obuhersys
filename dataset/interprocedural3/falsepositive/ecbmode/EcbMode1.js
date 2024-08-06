@@ -1,8 +1,8 @@
-const { createCipheriv: createEnc, randomBytes } = require('crypto');
+const { createCipheriv: createEnc, randomBytes } = require("crypto");
 
 async function main() {
-  const algo = 'aes-256-ecb';
-  const data = 'some data here';
+  const algo = "aes-256-ecb";
+  const data = "some data here";
   fn1(algo, data, createEnc);
 }
 
@@ -13,8 +13,10 @@ function fn1(algo, data, makeEnc) {
 }
 
 function fn2(algorithm, dataString, makeEnc) {
-  const enc = makeEnc('aes-256-gcm', randomBytes(32), randomBytes(16));
-  console.log(Buffer.concat([enc.update(dataString), enc.final()]).toString('hex'));
+  const enc = makeEnc("aes-256-gcm", randomBytes(32), randomBytes(16));
+  console.log(
+    Buffer.concat([enc.update(dataString), enc.final()]).toString("hex"),
+  );
 }
 
 main();

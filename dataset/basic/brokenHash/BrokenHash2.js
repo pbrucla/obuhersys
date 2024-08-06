@@ -1,13 +1,13 @@
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 // 'SHA-1' insecure hash
 async function main() {
-    const data = 'some data here';
-    const hash = crypto.createHash('sha1');
-    hash.update(data);
-    const digest = hash.digest('hex');
+  const data = "some data here";
+  const hash = crypto.createHash("sha1");
+  hash.update(data);
+  const digest = hash.digest("hex");
 
-    console.log(digest);
+  console.log(digest);
 }
 
 main();

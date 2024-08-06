@@ -1,10 +1,12 @@
-const { createCipheriv: createEnc, createDecipheriv, randomBytes } = require('crypto');
+const { createCipheriv: createEnc, createDecipheriv, randomBytes } = require(
+  "crypto",
+);
 
 const choice = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 async function main() {
-  const algo = 'aes-256-gcm';
-  const data = Buffer.from('some data here');
+  const algo = "aes-256-gcm";
+  const data = Buffer.from("some data here");
   const key = randomBytes(32);
   const iv = randomBytes(16);
   const cipher = createEnc(algo, key, iv);

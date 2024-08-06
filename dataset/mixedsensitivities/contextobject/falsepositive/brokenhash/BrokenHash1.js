@@ -1,26 +1,26 @@
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 // The algo members are set to a broken hash 'md5' and a secure hash 'sha256', but only the secure algo is used to create the hash.
 async function main() {
-    const data = 'some data here';
-    const hashObject1 = HashClass.GetObject('md5');
-    const hashObject2 = HashClass.GetObject('sha256');
-    const hash = crypto.createHash(hashObject2.algorithm);
-    hash.update(data);
-    const digest = hash.digest('hex');
+  const data = "some data here";
+  const hashObject1 = HashClass.GetObject("md5");
+  const hashObject2 = HashClass.GetObject("sha256");
+  const hash = crypto.createHash(hashObject2.algorithm);
+  hash.update(data);
+  const digest = hash.digest("hex");
 
-    console.log(digest);
+  console.log(digest);
 }
 
 class HashClass {
-    constructor() {
-        this.algorithm = '';
-    }
-    static GetObject(algo) {
-        const object = new HashClass();
-        object.algorithm = algo;
-        return object;
-    }
+  constructor() {
+    this.algorithm = "";
+  }
+  static GetObject(algo) {
+    const object = new HashClass();
+    object.algorithm = algo;
+    return object;
+  }
 }
 
 main();
