@@ -18,4 +18,4 @@ node --experimental-loader $ofunc/dist/index.js $testfile 2>&1 | tee logs/ofunc/
 
 mv -T logs/cryptoLog.log $logfile
 
-node $oproxy/dist/log/index.js -c $oproxy/src/tests/checks.js $logfile
+node $oproxy/dist/log/index.js -c $oproxy/src/tests/checks.js $logfile > >(tee -a logs/ofunc/$testcase.checker.log) 2> >(tee -a logs/ofunc/$testcase.checker.log >&2)

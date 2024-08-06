@@ -37,8 +37,12 @@ function wrap<T>(objToTrack: T, id: number, cname: string): T {
       return Reflect.get(target, prop, receiver);
     },
   };
-  (objToTrack as any)["__damn_src"] = cname;
-  return new Proxy(objToTrack, handler);
+  if (objToTrack !== null && objToTrack !== undefined && typeof objToTrack === "object") {
+    (objToTrack as any)["__damn_src"] = cname;
+    return new Proxy(objToTrack, handler);
+  } else {
+    return objToTrack;
+  }
 }
 
 function wrapConstructor<A extends any[], R, F extends (...args: A) => R>(target : string, constructor : F, cname : string) {

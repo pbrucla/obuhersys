@@ -23,22 +23,71 @@ type LoadHook = (
   nextLoad: (url: string, context: LoadContext) => Promise<LoadReturn>,
 ) => Promise<LoadReturn>;
 
-type GlobalPreloadHook = () => string;
-
 /**
  * Instruments a call expression with a call to log() to record method and arguments.
  */
-const addLog = (
-  callexpr: ts.CallExpression,
-  obj: ts.Expression | undefined,
-  methodName: string | undefined,
-) => {
-  if (!methodName && ts.isPropertyAccessExpression(callexpr.expression)) {
-    methodName = callexpr.expression.name.getText();
-    obj = callexpr.expression.expression;
-  }
-  const args = [...callexpr.arguments];
+const instrumentFunction = (callexpr: ts.CallExpression) => {
+  return factory.createCallExpression(
+    factory.createParenthesizedExpression(
+      factory.createArrowFunction(
+        undefined,
+        undefined,
+        [],
+        undefined,
+        factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+        factory.createBlock(
+          [
+            factory.createVariableStatement(
+              [],
+              factory.createVariableDeclarationList(
+                [
+                  factory.createVariableDeclaration(
+                    factory.createIdentifier("$_obj"),
+                    undefined,
+                    undefined,
+                    (callexpr.expression as ts.PropertyAccessExpression).expression,
+                  ),
+                  factory.createVariableDeclaration(
+                    factory.createIdentifier("$_args"),
+                    undefined,
+                    undefined,
+                    factory.createArrayLiteralExpression([...callexpr.arguments], false),
+                  ),
+                  factory.createVariableDeclaration(
+                    factory.createIdentifier("$_method"),
+                    undefined,
+                    undefined,
+                    factory.createPropertyAccessExpression(
+                      factory.createIdentifier("$_obj"),
+                      (callexpr.expression as ts.PropertyAccessExpression).name,
+                    ),
+                  ),
+                ],
+                ts.NodeFlags.Const,
+              ),
+            ),
+            factory.createReturnStatement(
+              factory.createCallExpression(
+                factory.createIdentifier("$_obu_log"),
+                undefined,
+                [
+                  factory.createIdentifier("$_obj"),
+                  factory.createIdentifier("$_method"),
+                  factory.createIdentifier("$_args"),
+                ],
+              )
+            ),
+          ],
+          false,
+        ),
+      ),
+    ),
+    undefined,
+    [],
+  );
+};
 
+const instrumentConstructor = (node: ts.CallExpression) => {
   return factory.createCallExpression(
     factory.createParenthesizedExpression(
       factory.createArrowFunction(
@@ -57,116 +106,31 @@ const addLog = (
                     factory.createIdentifier("$_args"),
                     undefined,
                     undefined,
-                    factory.createArrayLiteralExpression(args, false),
+                    factory.createArrayLiteralExpression([...node.arguments]),
                   ),
                   factory.createVariableDeclaration(
                     factory.createIdentifier("$_method"),
                     undefined,
                     undefined,
-                    callexpr.expression,
+                    node.expression,
                   ),
                 ],
                 ts.NodeFlags.Const,
               ),
             ),
             factory.createReturnStatement(
-              methodName && obj
-                ? factory.createCallExpression(
-                  factory.createIdentifier("$_obu_log"),
-                  undefined,
-                  [
-                    obj,
-                    factory.createStringLiteral(methodName),
-                    factory.createIdentifier("$_method"),
-                    factory.createIdentifier("$_args"),
-                  ],
-                )
-                : factory.updateCallExpression(
-                  callexpr,
+              factory.createCallExpression(
+                factory.createIdentifier("$_obu_log"),
+                undefined,
+                [
                   factory.createIdentifier("$_method"),
-                  callexpr.typeArguments,
-                  [
-                    factory.createSpreadElement(
-                      factory.createIdentifier("$_args"),
-                    ),
-                  ],
-                ),
+                  factory.createIdentifier("$_method"),
+                  factory.createIdentifier("$_args"),
+                ],
+              ),
             ),
-          ].filter((node) => node !== undefined) as ts.Statement[],
-          false,
-        ),
-      ),
-    ),
-    undefined,
-    [],
-  );
-};
-
-const instrumentVariableCall = (node: ts.CallExpression) => {
-  const expr = node.expression;
-
-  const symbolKey = factory.createCallExpression(
-    factory.createPropertyAccessExpression(
-      factory.createIdentifier("Symbol"),
-      "for",
-    ),
-    undefined,
-    [factory.createStringLiteral("[[obu]]")],
-  );
-
-  const contextVar = factory.createVariableDeclaration(
-    factory.createIdentifier("$_context"),
-    undefined,
-    undefined,
-    factory.createLogicalAnd(
-      factory.createIdentifier(expr.getText()),
-      factory.createElementAccessExpression(
-        factory.createIdentifier(expr.getText()),
-        symbolKey,
-      ),
-    ),
-  );
-
-  const argsVar = factory.createVariableDeclaration(
-    factory.createIdentifier("$_args"),
-    undefined,
-    undefined,
-    factory.createArrayLiteralExpression([...node.arguments]),
-  );
-
-  const updatedNode = factory.createBlock(
-    [
-      factory.createVariableStatement(
-        [],
-        factory.createVariableDeclarationList(
-          [contextVar, argsVar],
-          ts.NodeFlags.Const,
-        ),
-      ),
-      factory.createReturnStatement(
-        factory.createCallExpression(
-          factory.createIdentifier("$_obu_log"),
-          undefined,
-          [
-            factory.createIdentifier("$_context"),
-            factory.createStringLiteral(expr.getText()),
-            node.expression,
-            factory.createIdentifier("$_args"),
           ],
         ),
-      ),
-    ],
-  );
-
-  return factory.createCallExpression(
-    factory.createParenthesizedExpression(
-      factory.createArrowFunction(
-        undefined,
-        undefined,
-        [],
-        undefined,
-        factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-        updatedNode,
       ),
     ),
     undefined,
@@ -180,9 +144,11 @@ function transformNode(node: ts.Node): ts.Node {
   if (ts.isCallExpression(node)) {
     // Instrument direct method calls and calls on variables
     if (ts.isIdentifier(node.expression)) {
-      return instrumentVariableCall(node);
+      return instrumentConstructor(node);
+    } else if (ts.isPropertyAccessExpression(node.expression)) {
+      return instrumentFunction(node);
     } else {
-      return addLog(node, undefined, undefined);
+      return node;
     }
   } else {
     return node;
@@ -215,36 +181,40 @@ const instrumentSource = (src: string): string => {
 
   const logFunction = `
     (() => {
+      const obu_context = Symbol.for("[[obu_context]]");
+      const obu_constructed = Symbol.for("[[obu_constructed]]");
       const appendFileSync = require("node:fs").appendFileSync;
       const logFile = \`./logs/cryptoLog.log\`;
 
       let $_obu_counter = 0;
 
-      globalThis['$_obu_log'] = function(obj, methodName, method, args) {
-        const ctx = obj?.[Symbol.for("[[obu]]")];
+      globalThis['$_obu_log'] = function(obj, method, args) {
+        const ctx = obj?.[obu_context];
         if (ctx) {
           const id = $_obu_counter++;
           try {
             appendFileSync(logFile, JSON.stringify({
-              id: id,
+              id,
               type: "constructor",
-              objName: methodName,
+              fn: method.name,
+              objName: method.name,
               target: ctx,
               args,
             }) + "\\n");
           } catch {}
           const ret = method.bind(obj)(...args);
           if (ret !== undefined && ret !== null && typeof ret === "object") {
-            ret[Symbol.for("[[obu_constructed]]")] = id;
+            ret[obu_constructed] = id;
           }
           return ret;
         } else {
-          if(obj?.[Symbol.for("[[obu_constructed]]")] !== undefined) {
+          const constructed = obj?.[obu_constructed];
+          if(constructed !== undefined) {
             try {
               appendFileSync(logFile, JSON.stringify({
-                id: obj?.[Symbol.for("[[obu_constructed]]")],
+                id: constructed,
                 type: "function",
-                fn: methodName,
+                fn: method.name,
                 target: obj,
                 args,
               }) + "\\n");
@@ -255,10 +225,12 @@ const instrumentSource = (src: string): string => {
       };
 
       function $_obu_mark(obj, context) {
-        if (obj !== null && obj !== undefined && typeof obj === "object") {
-          obj[Symbol.for("[[obu]]")] = context;
+        if (obj !== null && obj !== undefined && (typeof obj === "object" || typeof obj === "function") && !Object.hasOwn(obj, obu_context)) {
+          obj[obu_context] = context;
           for (const k in obj) {
-            $_obu_mark(obj[k], context);
+            if (k != obu_context) {
+              $_obu_mark(obj[k], context);
+            }
           }
         }
       }
