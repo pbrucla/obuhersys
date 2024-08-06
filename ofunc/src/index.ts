@@ -259,7 +259,7 @@ export const load: LoadHook = async function (url, context, nextLoad) {
       r.source = fs.readFileSync(filePath, "utf-8");
     }
 
-    if (r.source) {
+    if (r.source && url.endsWith('.js')) {
       try {
         const sourceCode = r.source.toString();
 
