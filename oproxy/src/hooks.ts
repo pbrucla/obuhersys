@@ -14,13 +14,6 @@ export async function initialize(data: any) {
   // Receives data from `register`.
 }
 
-export async function resolve(specifier: any, context: any, nextResolve: any) {
-  if (specifier === 'crypto' || specifier === 'node:crypto') {
-    return { shortCircuit: true, url: pathurlResolveProxy('cryptoLogProxy.js') };
-  }
-  return nextResolve(specifier);
-};
-
 interface LoadReturn {
   format: string;
   shortCircuit: boolean | undefined;
@@ -133,6 +126,10 @@ export async function load(
         unwrapNamespaceImports(ast, node, toUnwrap);
       }
     },
+
+    // ImportExpression(node) {
+    //   console.log(`found ImportExpression ${node.source}`)
+    // }
   });
 
   let js = toJs(ast as Program, { filePath: url, SourceMapGenerator });
@@ -145,14 +142,29 @@ export async function load(
   //     .join('\n')}\n`
   // );
   
+  // Handle require, by prepending code to edit require cache
+  const handleRequireCode = `
+    if (!globalThis.__realRequire) {
+      globalThis.__realRequire = require;
+      const __damn_node_crypto_proxy = require(${JSON.stringify(resolveProxy('cryptoLogProxy.js'))});
+      require = (p) => {
+        if (['crypto', 'node:crypto'].includes(p)) {
+          return __damn_node_crypto_proxy;
+        }
+        return __realRequire(p);
+      };
+    }
+    // if (!('crypto' in require.cache)) {
+    //   const __damn_node_crypto_proxy = require(${JSON.stringify(resolveProxy('cryptoLogProxy.js'))});
+    //   require.cache["crypto"] = { id: 'crypto', path: 'stuff', exports: __damn_node_crypto_proxy, filename:'stuff.js', loaded: true, children: [], paths: []};
+    // }
+  `;
+
+  r.source = handleRequireCode + r.source;
   console.log(r.source);
 
   // r.shortCircuit = true;
   return r;
-}
-
-function pathurlResolveProxy(module: string): string {
-  return pathToFileURL(path.join(path.dirname(fileURLToPath(import.meta.url)), 'proxymodules', module)).toString();
 }
 
 function resolveProxy(module: string): string {
