@@ -1,27 +1,21 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
 
 testfile=$OBU_TESTFILE
+testcase=$OBU_TESTCASE
 key=$OBU_KEY
 
 oproxy="../oproxy"
 ofunc="../ofunc"
 
-# oproxy outputs intermediate logs to a logs/ folder
-rm -rf logs
-mkdir -p logs
+# ofunc outputs intermediate logs to a logs/ folder
+logfile=logs/ofunc/$testcase.log
+mkdir -p "$(dirname "$logfile")"
 
-# run 
-# node --enable-source-maps --import $oproxy/dist/index.js $testfile
-node --experimental-loader $ofunc/dist/index.js $testfile
+# run
+node --experimental-loader $ofunc/dist/index.js $testfile 2>&1 | tee logs/ofunc/$testcase.stdout.log
 
-logfile=logs/*.log
+mv -T logs/cryptoLog.log $logfile
 
 node $oproxy/dist/log/index.js -c $oproxy/src/tests/checks.js $logfile
-# write process.env.OBU_KEY yes to stderr in index.ts of oproxy or wherever checking logic is
-
-
-# mark as secure (to stderr)
-# >&2 echo $OBU_KEY yes
-
-# mark as insecure (to stderr)
-# >&2 echo $OBU_KEY no

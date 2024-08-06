@@ -1,6 +1,9 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
 
 testfile=$OBU_TESTFILE
+testcase=$OBU_TESTCASE
 key=$OBU_KEY
 
 # mark as secure (to stderr)

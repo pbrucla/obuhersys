@@ -7,6 +7,7 @@ This directory has the scripts used to evaluate our dynamic analysis on our port
 This script requires `pydantic` and `pyyaml`. Install through `pip`.
 
 ```
+rm -rf logs
 python3 evaluate.py ./examplecmd
 ```
 
