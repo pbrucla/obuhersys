@@ -24,9 +24,9 @@ type LoadHook = (
 ) => Promise<LoadReturn>;
 
 /**
- * Instruments a call expression with a call to log() to record method and arguments.
+ * Instruments an `obj.foo()` call with a call to `$_obu_log`.
  */
-const instrumentFunction = (callexpr: ts.CallExpression) => {
+const instrumentFunction = (node: ts.CallExpression, lhs: ts.PropertyAccessExpression) => {
   return factory.createCallExpression(
     factory.createParenthesizedExpression(
       factory.createArrowFunction(
@@ -45,13 +45,13 @@ const instrumentFunction = (callexpr: ts.CallExpression) => {
                     factory.createIdentifier("$_obj"),
                     undefined,
                     undefined,
-                    (callexpr.expression as ts.PropertyAccessExpression).expression,
+                    lhs.expression,
                   ),
                   factory.createVariableDeclaration(
                     factory.createIdentifier("$_args"),
                     undefined,
                     undefined,
-                    factory.createArrayLiteralExpression([...callexpr.arguments], false),
+                    factory.createArrayLiteralExpression([...node.arguments], false),
                   ),
                   factory.createVariableDeclaration(
                     factory.createIdentifier("$_method"),
@@ -59,7 +59,7 @@ const instrumentFunction = (callexpr: ts.CallExpression) => {
                     undefined,
                     factory.createPropertyAccessExpression(
                       factory.createIdentifier("$_obj"),
-                      (callexpr.expression as ts.PropertyAccessExpression).name,
+                      lhs.name,
                     ),
                   ),
                 ],
@@ -87,6 +87,9 @@ const instrumentFunction = (callexpr: ts.CallExpression) => {
   );
 };
 
+/**
+ * Instruments an `("any expr")()` call with a call to `$_obu_log`.
+ */
 const instrumentConstructor = (node: ts.CallExpression) => {
   return factory.createCallExpression(
     factory.createParenthesizedExpression(
@@ -143,12 +146,10 @@ function transformNode(node: ts.Node): ts.Node {
 
   if (ts.isCallExpression(node)) {
     // Instrument direct method calls and calls on variables
-    if (ts.isIdentifier(node.expression)) {
-      return instrumentConstructor(node);
-    } else if (ts.isPropertyAccessExpression(node.expression)) {
-      return instrumentFunction(node);
+    if (ts.isPropertyAccessExpression(node.expression)) {
+      return instrumentFunction(node, node.expression);
     } else {
-      return node;
+      return instrumentConstructor(node);
     }
   } else {
     return node;
@@ -189,21 +190,22 @@ const instrumentSource = (src: string): string => {
       let $_obu_counter = 0;
 
       globalThis['$_obu_log'] = function(obj, method, args) {
-        const ctx = obj?.[obu_context];
+        const ctx = method?.[obu_context];
         if (ctx) {
-          const id = $_obu_counter++;
+          const isConstructor = ctx.length === 3 && ctx[2] === true;
+          const id = isConstructor ? $_obu_counter++ : null;
           try {
             appendFileSync(logFile, JSON.stringify({
               id,
-              type: "constructor",
-              fn: method.name,
-              objName: method.name,
-              target: ctx,
+              type: isConstructor ? "constructor" : "function",
+              fn: ctx[1],
+              objName: ctx[1],
+              target: ctx[0],
               args,
             }) + "\\n");
           } catch {}
-          const ret = method.bind(obj)(...args);
-          if (ret !== undefined && ret !== null && typeof ret === "object") {
+          const ret = method.apply(obj, args);
+          if (isConstructor && ret !== undefined && ret !== null && typeof ret === "object") {
             ret[obu_constructed] = id;
           }
           return ret;
@@ -220,22 +222,27 @@ const instrumentSource = (src: string): string => {
               }) + "\\n");
             } catch {}
           }
-          return method.bind(obj)(...args);
+          return method.apply(obj, args);
         }
       };
 
-      function $_obu_mark(obj, context) {
+      function $_obu_mark(obj, context, name) {
         if (obj !== null && obj !== undefined && (typeof obj === "object" || typeof obj === "function") && !Object.hasOwn(obj, obu_context)) {
-          obj[obu_context] = context;
+          obj[obu_context] = [context, name];
           for (const k in obj) {
             if (k != obu_context) {
-              $_obu_mark(obj[k], context);
+              $_obu_mark(obj[k], context, k);
             }
           }
         }
       }
 
-      $_obu_mark(require("crypto"), "crypto");
+      const _crypto = require("crypto");
+      $_obu_mark(_crypto, "crypto", undefined);
+      const cryptoConstructors = ["createCipheriv", "createDecipheriv", "createHash", "pbkdf2"];
+      for (const ctor of cryptoConstructors) {
+        _crypto[ctor][obu_context].push(true);
+      }
     })();
   `
     .replace(/^\s*/, "")

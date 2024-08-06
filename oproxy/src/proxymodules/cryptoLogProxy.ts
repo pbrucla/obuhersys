@@ -26,11 +26,14 @@ function wrap<T>(objToTrack: T, id: number, cname: string): T {
       if (typeof result === 'function') {
         const ret = (...args: any[]) => {
           logCall(id, target, prop, args);
-          
-          const res = result.apply(target, args);
-          return res;
+          return result.apply(target, args);
         };
-        (ret as any)[promisify.custom] = promisify(result);
+        if (promisify.custom in result) {
+          (ret as any)[promisify.custom] = (...args: any[]) => {
+            logCall(null, 'crypto', prop, args);
+            return result[promisify.custom].apply(target, args);
+          };
+        }
         return ret;
       }
       logCall(id, target, prop, receiver);
@@ -55,15 +58,15 @@ function wrapConstructor<A extends any[], R, F extends (...args: A) => R>(target
 
 
 const createCipheriv = wrapConstructor('crypto', _crypto.createCipheriv, 'createCipheriv');
-const creatDecipheriv = wrapConstructor('crypto', _crypto.createDecipheriv, 'createDecipheriv');
-const randomBytes = wrapConstructor('crypto', _crypto.randomBytes, 'randomBytes');
+const createDecipheriv = wrapConstructor('crypto', _crypto.createDecipheriv, 'createDecipheriv');
+// const randomBytes = wrapConstructor('crypto', _crypto.randomBytes, 'randomBytes');
 const createHash = wrapConstructor('crypto', _crypto.createHash, 'createHash');
 // const generateKeyPair = wrapConstructor('crypto', _crypto.generateKeyPair, 'generateKeyPair');
 const pbkdf2 = wrapConstructor('crypto', _crypto.pbkdf2, 'pbkdf2');
 
 const constructors: Record<string, any> = {
   'createCipheriv': createCipheriv,
-  'createDecipheriv': creatDecipheriv,
+  'createDecipheriv': createDecipheriv,
   // 'randomBytes': randomBytes,
   'createHash': createHash,
   'pbkdf2': pbkdf2,
@@ -110,13 +113,15 @@ const cryptoProxy = new Proxy(_crypto, {
     } else if (typeof result === 'function') {
       const ret = (...args: any[]) => {
         logCall(null, 'crypto', prop, args);
-        
-        const res = result.apply(target, args);
-        return res;
+        return result.apply(target, args);
       };
-      (ret as any)[promisify.custom] = promisify(result);
+      if (promisify.custom in result) {
+        (ret as any)[promisify.custom] = (...args: any[]) => {
+          logCall(null, 'crypto', prop, args);
+          return result[promisify.custom].apply(target, args);
+        };
+      }
       return ret;
-
     } else {
       return Reflect.get(target, prop, receiver);
     }
