@@ -15,8 +15,8 @@ async function fn1(data, size, makePair) {
 
 async function fn2(modulusLength, buffer, makePair) {
   const { publicKey, privateKey } = await promisify(generateKeyPair)("rsa", { modulusLength });
-  const public = publicEncrypt(publicKey, buffer);
-  const decrypt = privateDecrypt(privateKey, public);
+  const encrypted = publicEncrypt(publicKey, buffer);
+  const decrypt = privateDecrypt(privateKey, encrypted);
   console.log(decrypt.toString());
 }
 

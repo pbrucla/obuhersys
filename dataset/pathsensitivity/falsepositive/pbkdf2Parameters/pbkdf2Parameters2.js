@@ -5,7 +5,7 @@ const password = 'your-password';
 const keyLength = 32; 
 const digest = 'sha256';
 const condition  = 2;
-const salt = salt = crypto.randomBytes(16);
+const salt = crypto.randomBytes(16);
 
 if (condition>1) {
     iterations = 1000000;

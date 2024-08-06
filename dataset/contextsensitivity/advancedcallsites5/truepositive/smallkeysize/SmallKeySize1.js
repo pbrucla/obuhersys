@@ -11,10 +11,10 @@ async function main() {
         const object5 = Identity({ modulusLength: 512 });
         const buffer = Buffer.from("whatever");
         const { publicKey, privateKey } = await util.promisify(crypto.generateKeyPair)("rsa", object1);
-        const public = crypto.publicEncrypt(publicKey, buffer);
-        const decrypt = crypto.privateDecrypt(privateKey, public);
+        const encrypted = crypto.publicEncrypt(publicKey, buffer);
+        const decrypt = crypto.privateDecrypt(privateKey, encrypted);
 
-        console.log('public:', public);
+        console.log('public:', encrypted);
         console.log('decrypt:', new TextDecoder().decode(decrypt));
         
     } catch (error) {

@@ -4,10 +4,6 @@ const crypto = require('crypto');
 
 // two different buffer sizes assigned to variables, object1(1024) and object2(2048), insecure object1 buffer size used for function
 
-function Identity(i)
-{
-    return i; 
-}
 async function main() {
     try {
 
@@ -15,10 +11,10 @@ async function main() {
         const object2 = Identity({modulusLength: 2048 }); 
         const buffer = Buffer.from("whatever");
         const { publicKey, privateKey } = await util.promisify(crypto.generateKeyPair)("rsa", object1);
-        const public = crypto.publicEncrypt(publicKey, buffer);
-        const decrypt = crypto.privateDecrypt(privateKey, public);
+        const encrypted = crypto.publicEncrypt(publicKey, buffer);
+        const decrypt = crypto.privateDecrypt(privateKey, encrypted);
 
-        console.log('public:', public);
+        console.log('public:', encrypted);
         console.log('decrypt:', new TextDecoder().decode(decrypt));
         
     } catch (error) {
@@ -26,7 +22,8 @@ async function main() {
     }   
 }
 
-function Identity(s) {
-    return s;
+function Identity(i) {
+    return i;
 }
+
 main();

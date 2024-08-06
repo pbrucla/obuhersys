@@ -9,10 +9,10 @@ async function main() {
         const sizeObject2 = SizeClass.GetObject({ modulusLength: 3072 });
         const buffer = Buffer.from("whatever");
         const { publicKey, privateKey } = await util.promisify(crypto.generateKeyPair)("rsa", {modulusLength: sizeObject2.keySize});
-        const public = crypto.publicEncrypt(publicKey, buffer);
-        const decrypt = crypto.privateDecrypt(privateKey, public);
+        const encrypted = crypto.publicEncrypt(publicKey, buffer);
+        const decrypt = crypto.privateDecrypt(privateKey, encrypted);
 
-        console.log('public:', public);
+        console.log('public:', encrypted);
         console.log('decrypt:', new TextDecoder().decode(decrypt));
         
     } catch (error) {
