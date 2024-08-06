@@ -14,6 +14,16 @@ export async function initialize(data: any) {
   // Receives data from `register`.
 }
 
+export async function resolve(specifier: any, context: any, nextResolve: any) {
+  if (specifier === 'node:crypto?owouwu') {
+    return nextResolve('node:crypto', { owo: 'uwu' });
+  }
+  if (context?.owo !== 'uwu' && ['crypto', 'node:crypto'].includes(specifier)) {
+    return nextResolve(pathurlResolveProxy('cryptoLogProxy.js'));
+  }
+  return nextResolve(specifier);
+};
+
 interface LoadReturn {
   format: string;
   shortCircuit: boolean | undefined;
@@ -50,21 +60,13 @@ export async function load(
     r.source = fs.readFileSync(filePath, 'utf-8');
   }
 
-  if (!r.source && url.startsWith('file://')) {
-    const filePath = fileURLToPath(url);
-    r.source = fs.readFileSync(filePath, 'utf-8');
-  }
-
   if (new URL(url).pathname.split('/').at(-2) === 'proxymodules') {
     // Don't modify if it's the proxy module importing the original module, avoid circular import
     // console.log(`loading proxy ${url}\n`);
     r.format = 'commonjs';
     return r;
-  } else {
-    // console.log(`loading module ${url}\n`);
   }
 
-  // convert TypedArray to a ArrayBuffer
   if (
     r.source instanceof Int8Array ||
     r.source instanceof Uint8Array ||
@@ -86,6 +88,14 @@ export async function load(
     r.source = new TextDecoder().decode(r.source);
   }
 
+  /**
+   * The source might have an import * as x from 'module'.
+   *
+   * This runs into commonjs/esm compatibility issues resulting in x not being
+   * the desired module.
+   *
+   * We fix such namespace imports.
+   */
   const comments: Comment[] = [];
   const ast = Parser.parse(r.source, {
     ecmaVersion: 'latest',
@@ -96,12 +106,7 @@ export async function load(
   attachComments(ast as Program, comments);
 
   const specifierFixupVisitors: walk.SimpleVisitors<string[]> = {
-    ImportDefaultSpecifier(node) {
-      // console.log(`found ImportDefaultSpecifier ${node.local.name}`);
-    },
-
     ImportNamespaceSpecifier(node, state) {
-      // console.log(`found ImportNamespaceSpecifier ${node.local.name}`);
       state.push(node.local.name);
       node.local.name += UNWRAP_NAMESPACE_PLS;
     },
@@ -109,62 +114,22 @@ export async function load(
 
   walk.simple(ast, {
     ImportDeclaration(node) {
-      // console.log(`found ImportDeclaration ${node.source.value}`);
-      let needsSpecifierFixup = true;
-      switch (node.source.value) {
-        case 'crypto':
-        case 'node:crypto':
-          node.source.raw = JSON.stringify(resolveProxy('cryptoLogProxy.js'));
-          break;
-        default:
-          needsSpecifierFixup = false;
-          break;
-      }
-      if (needsSpecifierFixup) {
-        const toUnwrap: string[] = [];
-        walk.simple(node, specifierFixupVisitors, undefined, toUnwrap);
-        unwrapNamespaceImports(ast, node, toUnwrap);
-      }
+      const toUnwrap: string[] = [];
+      walk.simple(node, specifierFixupVisitors, undefined, toUnwrap);
+      unwrapNamespaceImports(ast, node, toUnwrap);
     },
-
-    // ImportExpression(node) {
-    //   console.log(`found ImportExpression ${node.source}`)
-    // }
   });
 
-  let js = toJs(ast as Program, { filePath: url, SourceMapGenerator });
-  // r.source = 
-  // r.source = js.value + '\n//# sourceMappingURL=data:application/json;base64,' + btoa(JSON.stringify(js.map));
-  // console.log(
-  //   `patched r.source:\n\n${js.value
-  //     .split('\n')
-  //     .map((x) => `    ${x}`)
-  //     .join('\n')}\n`
-  // );
-  
-  // Handle require, by prepending code to edit require cache
-  const handleRequireCode = `
-    if (!globalThis.__realRequire) {
-      globalThis.__realRequire = require;
-      const __damn_node_crypto_proxy = require(${JSON.stringify(resolveProxy('cryptoLogProxy.js'))});
-      require = (p) => {
-        if (['crypto', 'node:crypto'].includes(p)) {
-          return __damn_node_crypto_proxy;
-        }
-        return __realRequire(p);
-      };
-    }
-    // if (!('crypto' in require.cache)) {
-    //   const __damn_node_crypto_proxy = require(${JSON.stringify(resolveProxy('cryptoLogProxy.js'))});
-    //   require.cache["crypto"] = { id: 'crypto', path: 'stuff', exports: __damn_node_crypto_proxy, filename:'stuff.js', loaded: true, children: [], paths: []};
-    // }
-  `;
+  const js = toJs(ast as Program, { filePath: url, SourceMapGenerator });
 
-  r.source = handleRequireCode + r.source;
-  console.log(r.source);
+  r.source = js.value + '\n//# sourceMappingURL=data:application/json;base64,' + btoa(JSON.stringify(js.map));
 
-  // r.shortCircuit = true;
   return r;
+}
+
+
+function pathurlResolveProxy(module: string): string {
+  return pathToFileURL(path.join(path.dirname(fileURLToPath(import.meta.url)), 'proxymodules', module)).toString();
 }
 
 function resolveProxy(module: string): string {

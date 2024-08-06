@@ -1,5 +1,5 @@
 const fs = require('node:fs');
-const _crypto = require('node:crypto');
+const _crypto = require('node:crypto?owouwu');
 const path = require('node:path');
 const { promisify } = require('util');
 
