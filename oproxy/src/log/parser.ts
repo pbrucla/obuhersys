@@ -50,6 +50,7 @@ async function processLineByLine(filePath: string, verbose = false) {
   for await (const line of rl) {
     const call = {...JSON.parse(line), lineNum} as ConstructorCall | FunctionCall;
     logEntries.push(call);
+    lineNum++;
   }
 
   if (verbose) {

@@ -23,13 +23,15 @@ export interface ValidateArgRule {
 export interface MustCallRule {
   type: "mustCall";
   method: string;
-  implies: {
-    type: "mustNotCall";
-    method: string;
-  }[];
+  implies: Implication[];
 }
 
-export type Implication = ValidateArgRule | MustCallRule;
+export interface MustNotCallRule {
+  type: "mustNotCall";
+  method: string;
+}
+
+export type Implication = ValidateArgRule | MustCallRule | MustNotCallRule;
 
 export interface APIMisuseCheck {
   name: string;
@@ -48,12 +50,13 @@ type LogInfo = {
   }
 };
 
-interface CheckFail {
+interface FailingCheck {
   name: string;
+  rule: Implication,
   lineNum: number;
 }
 
-const checkFails: CheckFail[] = [];
+const failingChecks: FailingCheck[] = [];
 
 export async function main(filePath: string, checks: APIMisuseCheck[]) {
   const logInfo : LogInfo = await processLog(filePath);
@@ -82,12 +85,11 @@ export async function main(filePath: string, checks: APIMisuseCheck[]) {
     console.log(`Processed Check: ${check.name}`);
   })
 
-  console.error(`Failed Checks: ${checkFails.length}`);
-  checkFails.forEach((fail) => {
-    console.error(`Check Failed: ${fail.name} Line: ${fail.lineNum}`);
+  console.error(`Failed Checks: ${failingChecks.length}`);
+  failingChecks.forEach((fail) => {
   })
 
-  if(checkFails.length == 0) {
+  if(failingChecks.length == 0) {
     console.error(`${process.env.OBU_KEY} yes`);
   }
   else {
@@ -96,15 +98,13 @@ export async function main(filePath: string, checks: APIMisuseCheck[]) {
 }
 
 function enforceCheck(check: APIMisuseCheck, logInfo: LogInfo) {
-  console.log(`ENFORCING ${JSON.stringify(check)}`)
-  const { name, trigger, implies } = check;
+  console.log(`ENFORCING CHECK ${JSON.stringify(check)}`)
+  const { trigger, implies } = check;
   const { type } = trigger;
-  const { logEntries } = logInfo;
-  const { objects, objectTypes, staticFunctionCalls, staticFunctionCallsByModule, constructorCallsByModule } = logInfo.results;
+  const { staticFunctionCallsByModule, constructorCallsByModule } = logInfo.results;
   if (type === "constructor") {
     const cname = trigger.fn;
     constructorCallsByModule[trigger.lib]?.forEach((fcall) => {
-      console.log(`${fcall.fn}`)
       if(fcall.fn === cname) {
         implies.forEach((rule) => {
           enforceRule(check, rule, fcall, fcall.lineNum, logInfo); 
@@ -132,26 +132,29 @@ function enforceCheck(check: APIMisuseCheck, logInfo: LogInfo) {
   }
 }
 
-function enforceRule(check: APIMisuseCheck, rule: any, fcall: LogEntry, lineNum: number, logInfo: LogInfo) {
-  console.log(`ENFORCING RULE ${rule}`)
+function enforceRule(check: APIMisuseCheck, rule: Implication, fcall: LogEntry, lineNum: number, logInfo: LogInfo) {
+  console.log(`ENFORCING RULE ${JSON.stringify({ ...rule, implies: undefined })} ON ${fcall.id}`)
   if(rule.type === "validateArg") {
     validateArgs(check, rule, fcall, lineNum);
   }
   else if(rule.type === "mustCall") {
     lineNum = mustCall(check, rule, fcall, lineNum, logInfo);
   }
+  else if(rule.type === "mustNotCall") {
+    mustNotCall(check, rule, fcall, lineNum, logInfo);
+  }
 
   // if has recursive implies
-  if(rule.implies) {
+  if("implies" in rule && rule.implies) {
     rule.implies.forEach((nestedRule: any) => {
       enforceRule(check, nestedRule, fcall, lineNum, logInfo);
     })
   }
-} 
+}
 
-function validateArgs(check: APIMisuseCheck, rule: any, fcall: LogEntry, lineNum: number) {
+function validateArgs(check: APIMisuseCheck, rule: ValidateArgRule, fcall: LogEntry, lineNum: number) {
   if( !rule.validate(fcall.args[rule.index]) ) {
-    failCheck(check.name, lineNum);
+    failCheck(check.name, rule, lineNum);
   }
 }
 
@@ -166,25 +169,46 @@ function validateArgs(check: APIMisuseCheck, rule: any, fcall: LogEntry, lineNum
  * @param lineNum 
  * @param logInfo 
  */
-function mustCall(check: APIMisuseCheck, rule: any, fcall: LogEntry, lineNum: number, logInfo: LogInfo) {
+function mustCall(check: APIMisuseCheck, rule: MustCallRule, fcall: LogEntry, lineNum: number, logInfo: LogInfo) {
   //get the object that matches the fcall
   const { objects } = logInfo.results;
   const { functionCalls } = objects[fcall.id!]!;
 
-  functionCalls.forEach( (method) => {
+  for (const method of functionCalls) {
     if(method.lineNum > lineNum) {
       // TODO: maybe properly support regex? not sure if necessary though
-      if(rule.method === ".*") { 
-        return lineNum;
+      if(rule.method === ".*" || method.fn === rule.method) { 
+        return method.lineNum;
       }
-      if(method.fn === rule.method) {
-        return lineNum;
-      }
-    }   
-  });
+    }
+  }
 
-  failCheck(check.name, lineNum);
+  failCheck(check.name, rule, lineNum);
   return -1; 
+}
+
+/**
+ * 
+ * mustNotCall is used to check if a constructed object does not calls a function that must not be called 
+ * 
+ * @param rule 
+ * @param fcall 
+ * @param lineNum 
+ * @param logInfo 
+ */
+function mustNotCall(check: APIMisuseCheck, rule: MustNotCallRule, fcall: LogEntry, lineNum: number, logInfo: LogInfo) {
+  //get the object that matches the fcall
+  const { objects } = logInfo.results;
+  const { functionCalls } = objects[fcall.id!]!;
+
+  for (const method of functionCalls) {
+    if(method.lineNum > lineNum) {
+      // TODO: maybe properly support regex? not sure if necessary though
+      if(rule.method === ".*" || method.fn === rule.method) { 
+        failCheck(check.name, rule, method.lineNum);
+      }
+    }
+  }
 }
 
 /**
@@ -194,10 +218,12 @@ function mustCall(check: APIMisuseCheck, rule: any, fcall: LogEntry, lineNum: nu
  * @param name - The name of the failed check.
  * @param lineNum - The line number where the check failed.
  */
-function failCheck(name: string, lineNum: number) {
-  const formattedName = name.padEnd(40, ' '); // Adjust 20 to the maximum length you expect for 'name'
-  const formattedLineNum = lineNum.toString().padStart(5, ' '); // Adjust 5 to the maximum length you expect for 'lineNum'
-  
-  console.error(`Check Failed: ${formattedName} Line: ${formattedLineNum}`);
-  checkFails.push({name, lineNum});
+function failCheck(name: string, rule: Implication, lineNum: number) {
+  const fail = {name, rule, lineNum};
+  failingChecks.push(fail);
+  logFailingCheck(fail);
+}
+
+function logFailingCheck(fail: FailingCheck) {
+  console.error(`Check Failed: ${fail.name} Rule: ${JSON.stringify({ ...fail.rule, implies: undefined })} Line: ${fail.lineNum}`);
 }

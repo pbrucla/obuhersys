@@ -126,7 +126,7 @@ const instrumentConstructor = (node: ts.CallExpression) => {
                 factory.createIdentifier("$_obu_log"),
                 undefined,
                 [
-                  factory.createIdentifier("$_method"),
+                  factory.createIdentifier("undefined"),
                   factory.createIdentifier("$_method"),
                   factory.createIdentifier("$_args"),
                 ],
