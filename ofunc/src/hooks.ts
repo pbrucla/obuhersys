@@ -81,6 +81,77 @@ const instrumentFunction = (node: ts.CallExpression, lhs: ts.PropertyAccessExpre
   );
 };
 
+
+/**
+ * Instruments an `("any expr")["any expr"]()` call with a call to `$_obu_log`.
+ */
+const instrumentIndirectFunction = (node: ts.CallExpression, lhs: ts.ElementAccessExpression) => {
+  return factory.createCallExpression(
+    factory.createParenthesizedExpression(
+      factory.createArrowFunction(
+        undefined,
+        undefined,
+        [],
+        undefined,
+        factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+        factory.createBlock(
+          [
+            factory.createVariableStatement(
+              [],
+              factory.createVariableDeclarationList(
+                [
+                  factory.createVariableDeclaration(
+                    factory.createIdentifier("$_obj"),
+                    undefined,
+                    undefined,
+                    lhs.expression,
+                  ),
+                  factory.createVariableDeclaration(
+                    factory.createIdentifier("$_prop"),
+                    undefined,
+                    undefined,
+                    lhs.argumentExpression,
+                  ),
+                  factory.createVariableDeclaration(
+                    factory.createIdentifier("$_args"),
+                    undefined,
+                    undefined,
+                    factory.createArrayLiteralExpression([...node.arguments], false),
+                  ),
+                  factory.createVariableDeclaration(
+                    factory.createIdentifier("$_method"),
+                    undefined,
+                    undefined,
+                    factory.createElementAccessExpression(
+                      factory.createIdentifier("$_obj"),
+                      factory.createIdentifier("$_prop"),
+                    ),
+                  ),
+                ],
+                ts.NodeFlags.Const,
+              ),
+            ),
+            factory.createReturnStatement(
+              factory.createCallExpression(
+                factory.createIdentifier("$_obu_log"),
+                undefined,
+                [
+                  factory.createIdentifier("$_obj"),
+                  factory.createIdentifier("$_method"),
+                  factory.createIdentifier("$_args"),
+                ],
+              )
+            ),
+          ],
+          false,
+        ),
+      ),
+    ),
+    undefined,
+    [],
+  );
+};
+
 /**
  * Instruments an `("any expr")()` call with a call to `$_obu_log`.
  */
@@ -142,6 +213,8 @@ function transformNode(node: ts.Node): ts.Node {
     // Instrument direct method calls and calls on variables
     if (ts.isPropertyAccessExpression(node.expression)) {
       return instrumentFunction(node, node.expression);
+    } else if (ts.isElementAccessExpression(node.expression)) {
+      return instrumentIndirectFunction(node, node.expression);
     } else {
       return instrumentConstructor(node);
     }
@@ -216,7 +289,7 @@ const instrumentSource = (src: string): string => {
               }) + "\\n");
             } catch {}
           }
-          return method.apply(obj, args);
+          return (obj !== undefined && obj !== null) ? method.apply(obj, args) : method(...args);
         }
       };
 
