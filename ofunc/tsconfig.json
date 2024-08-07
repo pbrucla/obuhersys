@@ -12,12 +12,11 @@
     "incremental": true,
     "resolveJsonModule": true,
     "isolatedModules": false,
-    "esModuleInterop": true,
-    // "allowImportingTsExtensions": true,
     "importHelpers": true,
     "downlevelIteration": false,
     "outDir": "./dist",
-    "inlineSourceMap": true
+    "inlineSourceMap": true,
+    "allowJs": true
   },
-  "include": ["src/*.ts", "src/**/*.ts"]
+  "include": ["src/*.ts", "src/**/*.ts", "src/injected.js"]
 }

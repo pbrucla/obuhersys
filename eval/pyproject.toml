@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "obuherseys-eval"
+name = "obuhersys-eval"
 version = "1.0.0"
-description = "Evaluation scripts for DAMN, based on a port of CamBench to NodeJS."
+description = "Evaluation scripts for Obuhersys, based on a port of CamBench to NodeJS."
 authors = ["PBR at UCLA <psibetarho@gmail.com>"]
 license = "MIT"
 readme = "README.md"
@@ -10,7 +10,6 @@ readme = "README.md"
 python = "^3.11"
 pydantic = "^2.8.2"
 pyyaml = "^6.0.1"
-
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"

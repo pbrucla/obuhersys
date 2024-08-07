@@ -1,10 +1,10 @@
-import * as fs from 'node:fs';
-import * as readline from 'node:readline';
+import * as fs from "node:fs";
+import * as readline from "node:readline";
 
 // Constructor Call {"objName":"createCipheriv","target":"crypto","prop":"createCipheriv","args":["aes-256-gcm","potatopotatopotatopotatopotatopo","beetroot"]}
 export interface ConstructorCall {
-  lineNum: number,
-  type: 'constructor';
+  lineNum: number;
+  type: "constructor";
   objName: string;
   id: number;
   target: string;
@@ -14,8 +14,8 @@ export interface ConstructorCall {
 
 // Function Call {"id":0,"target":{"_decoder":null},"prop":"final","args":[]}
 export interface FunctionCall {
-  lineNum: number,
-  type: 'function';
+  lineNum: number;
+  type: "function";
   id: number | null;
   target: any;
   fn: string;
@@ -48,13 +48,13 @@ async function processLineByLine(filePath: string, verbose = false) {
 
   let lineNum: number = 0;
   for await (const line of rl) {
-    const call = {...JSON.parse(line), lineNum} as ConstructorCall | FunctionCall;
+    const call = { ...JSON.parse(line), lineNum } as ConstructorCall | FunctionCall;
     logEntries.push(call);
     lineNum++;
   }
 
   if (verbose) {
-    console.log('Finished reading log entries.');
+    console.log("Finished reading log entries.");
   }
 
   return logEntries;
@@ -80,7 +80,7 @@ function processLogEntries(logEntries: LogEntry[]) {
 
   logEntries.forEach((entry) => {
     // if entry is a constructor
-    if (entry.type === 'constructor') {
+    if (entry.type === "constructor") {
       // create a new object
       const obj: ConstructedObject = {
         id: entry.id,
@@ -107,7 +107,7 @@ function processLogEntries(logEntries: LogEntry[]) {
       objectTypes[entry.objName].push(entry.id);
     }
     // if entry is a function, add it to list of function calls for corresponding object
-    else if (entry.type === 'function') {
+    else if (entry.type === "function") {
       if (entry.id !== null) {
         entry = entry as FunctionCall;
         const obj = objects[entry.id!];
@@ -121,7 +121,7 @@ function processLogEntries(logEntries: LogEntry[]) {
         }
         staticFunctionCallsByModule[entry.target].push(entry as StaticCall);
       }
-    } 
+    }
   });
 
   return { objects, objectTypes, staticFunctionCalls, staticFunctionCallsByModule, constructorCallsByModule };

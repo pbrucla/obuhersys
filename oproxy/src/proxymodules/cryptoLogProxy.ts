@@ -1,7 +1,7 @@
-const fs = require('node:fs');
-const _crypto = require('node:crypto?owouwu');
-const path = require('node:path');
-const { promisify } = require('util');
+const fs = require("node:fs");
+const _crypto = require("node:crypto?__obuhersys_proxy");
+const path = require("node:path");
+const { promisify } = require("util");
 
 //==============================================================================
 
@@ -9,9 +9,9 @@ const { promisify } = require('util');
 const logFile = `./logs/cryptoLog-${new Date().getTime()}.log`;
 const logFileResolved = path.resolve(logFile);
 
-console.error(`==== DAMN ${'='.repeat(logFileResolved.length + 1)}
+console.error(`==== obuhersys ${"=".repeat(logFileResolved.length + 1)}
 Logging to ${logFileResolved}
-${'='.repeat(logFileResolved.length + 11)}
+${"=".repeat(logFileResolved.length + 16)}
 `);
 
 //==============================================================================
@@ -23,14 +23,14 @@ function wrap<T>(objToTrack: T, id: number, cname: string): T {
     get: function (target: any, prop: any, receiver: any) {
       let result = Reflect.get(target, prop, receiver);
       //log function calls to output file
-      if (typeof result === 'function') {
+      if (typeof result === "function") {
         const ret = (...args: any[]) => {
           logCall(id, target, prop, args);
           return result.apply(target, args);
         };
         if (promisify.custom in result) {
           (ret as any)[promisify.custom] = (...args: any[]) => {
-            logCall(null, 'crypto', prop, args);
+            logCall(null, "crypto", prop, args);
             return result[promisify.custom].apply(target, args);
           };
         }
@@ -41,52 +41,54 @@ function wrap<T>(objToTrack: T, id: number, cname: string): T {
     },
   };
   if (objToTrack !== null && objToTrack !== undefined && typeof objToTrack === "object") {
-    (objToTrack as any)["__damn_src"] = cname;
+    (objToTrack as any)["__obuhersys_src"] = cname;
     return new Proxy(objToTrack, handler);
   } else {
     return objToTrack;
   }
 }
 
-function wrapConstructor<A extends any[], R, F extends (...args: A) => R>(target : string, constructor : F, cname : string) {
-  return (...args : Parameters<F>) => {
+function wrapConstructor<A extends any[], R, F extends (...args: A) => R>(
+  target: string,
+  constructor: F,
+  cname: string
+) {
+  return (...args: Parameters<F>) => {
     const id = idCount++;
     logConstruct(cname, id, target, cname, args);
     return wrap(constructor(...args), id, cname);
   };
 }
 
-
-const createCipheriv = wrapConstructor('crypto', _crypto.createCipheriv, 'createCipheriv');
-const createDecipheriv = wrapConstructor('crypto', _crypto.createDecipheriv, 'createDecipheriv');
+const createCipheriv = wrapConstructor("crypto", _crypto.createCipheriv, "createCipheriv");
+const createDecipheriv = wrapConstructor("crypto", _crypto.createDecipheriv, "createDecipheriv");
 // const randomBytes = wrapConstructor('crypto', _crypto.randomBytes, 'randomBytes');
-const createHash = wrapConstructor('crypto', _crypto.createHash, 'createHash');
+const createHash = wrapConstructor("crypto", _crypto.createHash, "createHash");
 // const generateKeyPair = wrapConstructor('crypto', _crypto.generateKeyPair, 'generateKeyPair');
-const pbkdf2 = wrapConstructor('crypto', _crypto.pbkdf2, 'pbkdf2');
+const pbkdf2 = wrapConstructor("crypto", _crypto.pbkdf2, "pbkdf2");
 
 const constructors: Record<string, any> = {
-  'createCipheriv': createCipheriv,
-  'createDecipheriv': createDecipheriv,
+  createCipheriv: createCipheriv,
+  createDecipheriv: createDecipheriv,
   // 'randomBytes': randomBytes,
-  'createHash': createHash,
-  'pbkdf2': pbkdf2,
+  createHash: createHash,
+  pbkdf2: pbkdf2,
   // 'generateKeyPair': generateKeyPair,
 };
 
-
 function log(text: string) {
   // console.log(text);
-  fs.appendFileSync(logFile, text+"\n");
+  fs.appendFileSync(logFile, text + "\n");
 }
 
 function logCall(id: number | null, target: any, prop: any, args: any) {
   // avoid logging node internals
-  if (typeof prop === 'symbol') {
+  if (typeof prop === "symbol") {
     return;
   }
 
   // avoid logging any toString related functions invoked by this logCall to avoid infinite loops
-  if (prop === 'toString' || prop === 'toJSON' || prop === 'valueOf') {
+  if (prop === "toString" || prop === "toJSON" || prop === "valueOf") {
     return;
   }
 
@@ -110,14 +112,14 @@ const cryptoProxy = new Proxy(_crypto, {
     let handler = constructors[`${prop}`];
     if (handler !== null && handler !== undefined) {
       return handler;
-    } else if (typeof result === 'function') {
+    } else if (typeof result === "function") {
       const ret = (...args: any[]) => {
-        logCall(null, 'crypto', prop, args);
+        logCall(null, "crypto", prop, args);
         return result.apply(target, args);
       };
       if (promisify.custom in result) {
         (ret as any)[promisify.custom] = (...args: any[]) => {
-          logCall(null, 'crypto', prop, args);
+          logCall(null, "crypto", prop, args);
           return result[promisify.custom].apply(target, args);
         };
       }
@@ -128,5 +130,5 @@ const cryptoProxy = new Proxy(_crypto, {
   },
 });
 
-module.exports['default'] = cryptoProxy;
+module.exports["default"] = cryptoProxy;
 Object.keys(cryptoProxy).forEach((k) => (module.exports[k] = cryptoProxy[k]));

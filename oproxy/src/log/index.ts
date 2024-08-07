@@ -5,11 +5,12 @@ import path from "node:path";
 import { APIMisuseCheck, main } from "./checker.js";
 
 program
-    .name("DAMN Log Parser")
-    .option("-c, --checks <file>")
-    .argument("<log file>")
-    .action(async (logFile, options) => {
-        const checks = (await import(path.resolve(process.cwd(), options.checks)) as { default: APIMisuseCheck[] }).default;
-        await main(logFile, checks);
-    })
-    .parse();
+  .name("Obuhersys Log Parser")
+  .option("-c, --checks <file>")
+  .argument("<log file>")
+  .action(async (logFile, options) => {
+    const checks = ((await import(path.resolve(process.cwd(), options.checks))) as { default: APIMisuseCheck[] })
+      .default;
+    await main(logFile, checks);
+  })
+  .parse();

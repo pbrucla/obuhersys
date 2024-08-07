@@ -1,4 +1,4 @@
-import { ConstructorCall, FunctionCall, StaticCall, LogEntry, ConstructedObject, processLog} from "./parser.js";
+import { ConstructorCall, FunctionCall, StaticCall, LogEntry, ConstructedObject, processLog } from "./parser.js";
 
 export interface ConstructorTrigger {
   type: "constructor";
@@ -47,22 +47,23 @@ type LogInfo = {
     staticFunctionCalls: StaticCall[];
     staticFunctionCallsByModule: Record<string, FunctionCall[]>;
     constructorCallsByModule: Record<string, ConstructorCall[]>;
-  }
+  };
 };
 
 interface FailingCheck {
   name: string;
-  rule: Implication,
+  rule: Implication;
   lineNum: number;
 }
 
 const failingChecks: FailingCheck[] = [];
 
 export async function main(filePath: string, checks: APIMisuseCheck[]) {
-  const logInfo : LogInfo = await processLog(filePath);
+  const logInfo: LogInfo = await processLog(filePath);
 
   const { logEntries } = logInfo;
-  const { objects, objectTypes, staticFunctionCalls, staticFunctionCallsByModule, constructorCallsByModule } = logInfo.results;
+  const { objects, objectTypes, staticFunctionCalls, staticFunctionCallsByModule, constructorCallsByModule } =
+    logInfo.results;
 
   // Log out everything
   console.log(`Objects: ${objects.length}`);
@@ -78,36 +79,33 @@ export async function main(filePath: string, checks: APIMisuseCheck[]) {
   console.log(`Log Entries: ${logEntries.length}`);
   console.log(logEntries);
 
-
   // Evaluate checks
   checks.forEach((check) => {
     enforceCheck(check, logInfo);
     console.log(`Processed Check: ${check.name}`);
-  })
+  });
 
   console.error(`Failed Checks: ${failingChecks.length}`);
-  failingChecks.forEach((fail) => {
-  })
+  failingChecks.forEach((fail) => {});
 
-  if(failingChecks.length == 0) {
+  if (failingChecks.length == 0) {
     console.error(`${process.env.OBU_KEY} yes`);
-  }
-  else {
+  } else {
     console.error(`${process.env.OBU_KEY} no`);
   }
 }
 
 function enforceCheck(check: APIMisuseCheck, logInfo: LogInfo) {
-  console.log(`ENFORCING CHECK ${JSON.stringify(check)}`)
+  console.log(`ENFORCING CHECK ${JSON.stringify(check)}`);
   const { trigger, implies } = check;
   const { type } = trigger;
   const { staticFunctionCallsByModule, constructorCallsByModule } = logInfo.results;
   if (type === "constructor") {
     const cname = trigger.fn;
     constructorCallsByModule[trigger.lib]?.forEach((fcall) => {
-      if(fcall.fn === cname) {
+      if (fcall.fn === cname) {
         implies.forEach((rule) => {
-          enforceRule(check, rule, fcall, fcall.lineNum, logInfo); 
+          enforceRule(check, rule, fcall, fcall.lineNum, logInfo);
         });
       }
     });
@@ -115,14 +113,14 @@ function enforceCheck(check: APIMisuseCheck, logInfo: LogInfo) {
     const { target, fn, args } = trigger;
     const calls = staticFunctionCallsByModule[target];
     calls?.forEach((fcall) => {
-      if(fcall.fn === fn && fcall.args.length >= args.length) {
+      if (fcall.fn === fn && fcall.args.length >= args.length) {
         let valid = true;
         args.forEach((arg, i) => {
-          if(fcall.args[i] !== arg) {
+          if (fcall.args[i] !== arg) {
             valid = false;
           }
         });
-        if(valid) {
+        if (valid) {
           implies.forEach((rule) => {
             enforceRule(check, rule, fcall, fcall.lineNum, logInfo);
           });
@@ -133,41 +131,39 @@ function enforceCheck(check: APIMisuseCheck, logInfo: LogInfo) {
 }
 
 function enforceRule(check: APIMisuseCheck, rule: Implication, fcall: LogEntry, lineNum: number, logInfo: LogInfo) {
-  console.log(`ENFORCING RULE ${JSON.stringify({ ...rule, implies: undefined })} ON ${fcall.id}`)
-  if(rule.type === "validateArg") {
+  console.log(`ENFORCING RULE ${JSON.stringify({ ...rule, implies: undefined })} ON ${fcall.id}`);
+  if (rule.type === "validateArg") {
     validateArgs(check, rule, fcall, lineNum);
-  }
-  else if(rule.type === "mustCall") {
+  } else if (rule.type === "mustCall") {
     lineNum = mustCall(check, rule, fcall, lineNum, logInfo);
-  }
-  else if(rule.type === "mustNotCall") {
+  } else if (rule.type === "mustNotCall") {
     mustNotCall(check, rule, fcall, lineNum, logInfo);
   }
 
   // if has recursive implies
-  if("implies" in rule && rule.implies) {
+  if ("implies" in rule && rule.implies) {
     rule.implies.forEach((nestedRule: any) => {
       enforceRule(check, nestedRule, fcall, lineNum, logInfo);
-    })
+    });
   }
 }
 
 function validateArgs(check: APIMisuseCheck, rule: ValidateArgRule, fcall: LogEntry, lineNum: number) {
-  if( !rule.validate(fcall.args[rule.index]) ) {
+  if (!rule.validate(fcall.args[rule.index])) {
     failCheck(check.name, rule, lineNum);
   }
 }
 
 /**
- * 
- * mustCall is used to check if a constructed object calls a function that must be called 
- * 
+ *
+ * mustCall is used to check if a constructed object calls a function that must be called
+ *
  * Returns the lineNumber where the call is found in case this is needed for recursive checks
- * 
- * @param rule 
- * @param fcall 
- * @param lineNum 
- * @param logInfo 
+ *
+ * @param rule
+ * @param fcall
+ * @param lineNum
+ * @param logInfo
  */
 function mustCall(check: APIMisuseCheck, rule: MustCallRule, fcall: LogEntry, lineNum: number, logInfo: LogInfo) {
   //get the object that matches the fcall
@@ -175,26 +171,26 @@ function mustCall(check: APIMisuseCheck, rule: MustCallRule, fcall: LogEntry, li
   const { functionCalls } = objects[fcall.id!]!;
 
   for (const method of functionCalls) {
-    if(method.lineNum > lineNum) {
+    if (method.lineNum > lineNum) {
       // TODO: maybe properly support regex? not sure if necessary though
-      if(rule.method === ".*" || method.fn === rule.method) { 
+      if (rule.method === ".*" || method.fn === rule.method) {
         return method.lineNum;
       }
     }
   }
 
   failCheck(check.name, rule, lineNum);
-  return -1; 
+  return -1;
 }
 
 /**
- * 
- * mustNotCall is used to check if a constructed object does not calls a function that must not be called 
- * 
- * @param rule 
- * @param fcall 
- * @param lineNum 
- * @param logInfo 
+ *
+ * mustNotCall is used to check if a constructed object does not calls a function that must not be called
+ *
+ * @param rule
+ * @param fcall
+ * @param lineNum
+ * @param logInfo
  */
 function mustNotCall(check: APIMisuseCheck, rule: MustNotCallRule, fcall: LogEntry, lineNum: number, logInfo: LogInfo) {
   //get the object that matches the fcall
@@ -202,9 +198,9 @@ function mustNotCall(check: APIMisuseCheck, rule: MustNotCallRule, fcall: LogEnt
   const { functionCalls } = objects[fcall.id!]!;
 
   for (const method of functionCalls) {
-    if(method.lineNum > lineNum) {
+    if (method.lineNum > lineNum) {
       // TODO: maybe properly support regex? not sure if necessary though
-      if(rule.method === ".*" || method.fn === rule.method) { 
+      if (rule.method === ".*" || method.fn === rule.method) {
         failCheck(check.name, rule, method.lineNum);
       }
     }
@@ -214,16 +210,18 @@ function mustNotCall(check: APIMisuseCheck, rule: MustNotCallRule, fcall: LogEnt
 /**
  * Logs a failed check with the name and line number.
  * Adds it to global list of failed checks
- * 
+ *
  * @param name - The name of the failed check.
  * @param lineNum - The line number where the check failed.
  */
 function failCheck(name: string, rule: Implication, lineNum: number) {
-  const fail = {name, rule, lineNum};
+  const fail = { name, rule, lineNum };
   failingChecks.push(fail);
   logFailingCheck(fail);
 }
 
 function logFailingCheck(fail: FailingCheck) {
-  console.error(`Check Failed: ${fail.name} Rule: ${JSON.stringify({ ...fail.rule, implies: undefined })} Line: ${fail.lineNum}`);
+  console.error(
+    `Check Failed: ${fail.name} Rule: ${JSON.stringify({ ...fail.rule, implies: undefined })} Line: ${fail.lineNum}`
+  );
 }

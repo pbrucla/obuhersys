@@ -1,28 +1,24 @@
-import { Comment, Node as AcornNode, Parser, Program as AcornProgram } from 'acorn';
-import * as walk from 'acorn-walk';
-import { Program } from 'estree';
-import { attachComments } from 'estree-util-attach-comments';
-import { toJs } from 'estree-util-to-js';
-import path from 'node:path';
-import fs from 'node:fs';
-import { SourceMapGenerator } from 'source-map';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { Comment, Node as AcornNode, Parser, Program as AcornProgram } from "acorn";
+import * as walk from "acorn-walk";
+import { Program } from "estree";
+import { attachComments } from "estree-util-attach-comments";
+import { toJs } from "estree-util-to-js";
+import path from "node:path";
+import fs from "node:fs";
+import { SourceMapGenerator } from "source-map";
+import { fileURLToPath, pathToFileURL } from "url";
 
-const UNWRAP_NAMESPACE_PLS = '__damn_unwrap_namespace_pls';
-
-export async function initialize(data: any) {
-  // Receives data from `register`.
-}
+const UNWRAP_NAMESPACE_PLS = "__obuhersys_unwrap_namespace_pls";
 
 export async function resolve(specifier: any, context: any, nextResolve: any) {
-  if (specifier === 'node:crypto?owouwu') {
-    return nextResolve('node:crypto', { owo: 'uwu' });
+  if (specifier === "node:crypto?__obuhersys_proxy") {
+    return nextResolve("node:crypto", { __obuhersys_proxy: true });
   }
-  if (context?.owo !== 'uwu' && ['crypto', 'node:crypto'].includes(specifier)) {
-    return nextResolve(pathurlResolveProxy('cryptoLogProxy.js'));
+  if (context?.__obuhersys_proxy !== true && ["crypto", "node:crypto"].includes(specifier)) {
+    return nextResolve(pathurlResolveProxy("cryptoLogProxy.js"));
   }
   return nextResolve(specifier);
-};
+}
 
 interface LoadContext {
   conditions: string[];
@@ -58,19 +54,19 @@ export async function load(
   const r = await nextLoad(url, context);
 
   // only process js/cjs files
-  if (!(url.endsWith('.js') || url.endsWith('.cjs'))) {
+  if (!(url.endsWith(".js") || url.endsWith(".cjs"))) {
     return r;
   }
 
-  if (!r.source && url.startsWith('file://')) {
+  if (!r.source && url.startsWith("file://")) {
     const filePath = fileURLToPath(url);
-    r.source = fs.readFileSync(filePath, 'utf-8');
+    r.source = fs.readFileSync(filePath, "utf-8");
   }
 
-  if (new URL(url).pathname.split('/').at(-2) === 'proxymodules') {
+  if (new URL(url).pathname.split("/").at(-2) === "proxymodules") {
     // Don't modify if it's the proxy module importing the original module, avoid circular import
     // console.log(`loading proxy ${url}\n`);
-    r.format = 'commonjs';
+    r.format = "commonjs";
     return r;
   }
 
@@ -105,8 +101,8 @@ export async function load(
    */
   const comments: Comment[] = [];
   const ast = Parser.parse(r.source, {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
+    ecmaVersion: "latest",
+    sourceType: "module",
     locations: true,
     onComment: comments,
   });
@@ -129,18 +125,19 @@ export async function load(
 
   const js = toJs(ast as Program, { filePath: url, SourceMapGenerator });
 
-  r.source = js.value + '\n//# sourceMappingURL=data:application/json;base64,' + btoa(JSON.stringify(js.map));
+  r.source = js.value + "\n//# sourceMappingURL=data:application/json;base64," + btoa(JSON.stringify(js.map));
 
   return r;
 }
 
-
 function pathurlResolveProxy(module: string): string {
-  return pathToFileURL(path.join(path.dirname(fileURLToPath(import.meta.url)), 'proxymodules', module)).toString();
+  return pathToFileURL(path.join(path.dirname(fileURLToPath(import.meta.url)), "proxymodules", module)).toString();
 }
 
 function resolveProxy(module: string): string {
-  const fileurl = pathToFileURL(path.join(path.dirname(fileURLToPath(import.meta.url)), 'proxymodules', module)).toString();
+  const fileurl = pathToFileURL(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), "proxymodules", module)
+  ).toString();
   return fileurl.slice(7);
 }
 
@@ -155,26 +152,26 @@ function unwrapNamespaceImports(ast: AcornProgram, after: AcornNode, toUnwrap: s
   // console.log('inserting stuff at', index);
   toUnwrap.forEach((unwrapped) => {
     ast.body.splice(index, 0, {
-      type: 'VariableDeclaration',
-      kind: 'const',
+      type: "VariableDeclaration",
+      kind: "const",
       declarations: [
         {
-          type: 'VariableDeclarator',
+          type: "VariableDeclarator",
           id: {
-            type: 'Identifier',
+            type: "Identifier",
             name: unwrapped,
             ...source,
           },
           init: {
-            type: 'MemberExpression',
+            type: "MemberExpression",
             object: {
-              type: 'Identifier',
+              type: "Identifier",
               name: unwrapped + UNWRAP_NAMESPACE_PLS,
               ...source,
             },
             property: {
-              type: 'Identifier',
-              name: 'default',
+              type: "Identifier",
+              name: "default",
               ...source,
             },
             computed: false,

@@ -1,5 +1,5 @@
 {
-  "name": "obuherseys-func",
+  "name": "obuhersys-func",
   "version": "1.0.0",
   "author": "PBR @ UCLA",
   "license": "MIT",
@@ -14,7 +14,6 @@
   "dependencies": {
     "node": "^18.20.4"
   },
-  "packageManager": "pnpm@8.15.4+sha1.c85a4305534f76d461407b59277b954bac97b5c4",
   "devDependencies": {
     "@types/node": "^20.14.10",
     "prettier": "^2.8.8",
@@ -25,5 +24,6 @@
   },
   "files": [
     "./dist/*"
-  ]
+  ],
+  "packageManager": "pnpm@9.5.0"
 }

@@ -1,5 +1,5 @@
 // import * as crypto from 'node:crypto';
-const nodeCrypto = require('node:crypto');
+const nodeCrypto = require("node:crypto");
 
 // Weakset of cipher objects created
 const createdCipherProxyObjs: WeakRef<CipherProxyObj>[] = [];
@@ -13,21 +13,21 @@ interface DecipherProxyObj {
   [finalCalledSymbol]?: boolean;
 }
 
-const finalCalledSymbol = Symbol('[[finalCalled]]');
+const finalCalledSymbol = Symbol("[[finalCalled]]");
 
 // insecure algs
 const INSECURE_SYMM_ENCRYPTION_FUNCS = [
-  'RC2',
-  'RC-2',
-  'RC4',
-  'RC-4',
-  'RC5',
-  'RC-5',
-  'DES',
-  'DESede',
-  'Blowfish',
-  'IDEA',
-  '3-KeyTripleDES',
+  "RC2",
+  "RC-2",
+  "RC4",
+  "RC-4",
+  "RC5",
+  "RC-5",
+  "DES",
+  "DESede",
+  "Blowfish",
+  "IDEA",
+  "3-KeyTripleDES",
 ];
 
 const createCipherivHandler = {
@@ -52,7 +52,7 @@ const createCipherivHandler = {
       get: function (target: any, prop: any, receiver: any) {
         // if calling final, set the finalCalledSymbol to true
         switch (prop) {
-          case 'final':
+          case "final":
             target[finalCalledSymbol] = true;
             break;
           // case:
@@ -90,7 +90,7 @@ const createDecipherivHandler = {
         //   target[finalCalledSymbol] = true;
         // }
         switch (prop) {
-          case 'final':
+          case "final":
             target[finalCalledSymbol] = true;
             break;
           default:
@@ -113,15 +113,15 @@ const createDecipherivProxy = new Proxy(nodeCrypto.createDecipheriv.bind(nodeCry
 
 // crypto object with create decipher replaced with a proxy
 
-process.on('exit', () => {
+process.on("exit", () => {
   for (const ref of createdDecipherProxyObjs) {
     let obj = ref.deref();
-    if (obj !== undefined && typeof obj === 'object') {
+    if (obj !== undefined && typeof obj === "object") {
       if (!obj![finalCalledSymbol]) {
-        console.log('Final was never called');
-        throw new Error('Final was never called');
+        console.log("Final was never called");
+        throw new Error("Final was never called");
       } else {
-        console.log('Final was called yay :))))');
+        console.log("Final was called yay :))))");
       }
     }
   }
@@ -132,5 +132,5 @@ const cryptoProxy = {
   createDecipheriv: createDecipherivProxy,
 };
 
-module.exports['default'] = cryptoProxy;
+module.exports["default"] = cryptoProxy;
 Object.keys(cryptoProxy).forEach((k) => (module.exports[k] = cryptoProxy[k]));

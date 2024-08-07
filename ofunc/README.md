@@ -14,9 +14,4 @@ pnpm run dev # runs the index.ts loader against playground.ts
 
 ## Development
 
-This project uses [TypeScript](https://www.typescriptlang.org/) with
-[pnpm](https://pnpm.io/).
-
-[Semi-Standard](https://github.com/standard/semistandard)
-([standard](https://github.com/standard/standard) with semicolons) formatting is
-used.
+This project uses [TypeScript](https://www.typescriptlang.org/) with [pnpm](https://pnpm.io/).

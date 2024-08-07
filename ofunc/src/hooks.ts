@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import process from "node:process";
 import ts, { factory } from "typescript";
 import { fileURLToPath } from "url";
@@ -39,48 +40,40 @@ const instrumentFunction = (node: ts.CallExpression, lhs: ts.PropertyAccessExpre
                     factory.createIdentifier("$_obj"),
                     undefined,
                     undefined,
-                    lhs.expression,
+                    lhs.expression
                   ),
                   factory.createVariableDeclaration(
                     factory.createIdentifier("$_args"),
                     undefined,
                     undefined,
-                    factory.createArrayLiteralExpression([...node.arguments], false),
+                    factory.createArrayLiteralExpression([...node.arguments], false)
                   ),
                   factory.createVariableDeclaration(
                     factory.createIdentifier("$_method"),
                     undefined,
                     undefined,
-                    factory.createPropertyAccessExpression(
-                      factory.createIdentifier("$_obj"),
-                      lhs.name,
-                    ),
+                    factory.createPropertyAccessExpression(factory.createIdentifier("$_obj"), lhs.name)
                   ),
                 ],
-                ts.NodeFlags.Const,
-              ),
-            ),
-            factory.createReturnStatement(
-              factory.createCallExpression(
-                factory.createIdentifier("$_obu_log"),
-                undefined,
-                [
-                  factory.createIdentifier("$_obj"),
-                  factory.createIdentifier("$_method"),
-                  factory.createIdentifier("$_args"),
-                ],
+                ts.NodeFlags.Const
               )
             ),
+            factory.createReturnStatement(
+              factory.createCallExpression(factory.createIdentifier("$_obu_log"), undefined, [
+                factory.createIdentifier("$_obj"),
+                factory.createIdentifier("$_method"),
+                factory.createIdentifier("$_args"),
+              ])
+            ),
           ],
-          false,
-        ),
-      ),
+          false
+        )
+      )
     ),
     undefined,
-    [],
+    []
   );
 };
-
 
 /**
  * Instruments an `("any expr")["any expr"]()` call with a call to `$_obu_log`.
@@ -104,19 +97,19 @@ const instrumentIndirectFunction = (node: ts.CallExpression, lhs: ts.ElementAcce
                     factory.createIdentifier("$_obj"),
                     undefined,
                     undefined,
-                    lhs.expression,
+                    lhs.expression
                   ),
                   factory.createVariableDeclaration(
                     factory.createIdentifier("$_prop"),
                     undefined,
                     undefined,
-                    lhs.argumentExpression,
+                    lhs.argumentExpression
                   ),
                   factory.createVariableDeclaration(
                     factory.createIdentifier("$_args"),
                     undefined,
                     undefined,
-                    factory.createArrayLiteralExpression([...node.arguments], false),
+                    factory.createArrayLiteralExpression([...node.arguments], false)
                   ),
                   factory.createVariableDeclaration(
                     factory.createIdentifier("$_method"),
@@ -124,31 +117,27 @@ const instrumentIndirectFunction = (node: ts.CallExpression, lhs: ts.ElementAcce
                     undefined,
                     factory.createElementAccessExpression(
                       factory.createIdentifier("$_obj"),
-                      factory.createIdentifier("$_prop"),
-                    ),
+                      factory.createIdentifier("$_prop")
+                    )
                   ),
                 ],
-                ts.NodeFlags.Const,
-              ),
-            ),
-            factory.createReturnStatement(
-              factory.createCallExpression(
-                factory.createIdentifier("$_obu_log"),
-                undefined,
-                [
-                  factory.createIdentifier("$_obj"),
-                  factory.createIdentifier("$_method"),
-                  factory.createIdentifier("$_args"),
-                ],
+                ts.NodeFlags.Const
               )
             ),
+            factory.createReturnStatement(
+              factory.createCallExpression(factory.createIdentifier("$_obu_log"), undefined, [
+                factory.createIdentifier("$_obj"),
+                factory.createIdentifier("$_method"),
+                factory.createIdentifier("$_args"),
+              ])
+            ),
           ],
-          false,
-        ),
-      ),
+          false
+        )
+      )
     ),
     undefined,
-    [],
+    []
   );
 };
 
@@ -164,45 +153,39 @@ const instrumentConstructor = (node: ts.CallExpression) => {
         [],
         undefined,
         factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-        factory.createBlock(
-          [
-            factory.createVariableStatement(
-              [],
-              factory.createVariableDeclarationList(
-                [
-                  factory.createVariableDeclaration(
-                    factory.createIdentifier("$_args"),
-                    undefined,
-                    undefined,
-                    factory.createArrayLiteralExpression([...node.arguments]),
-                  ),
-                  factory.createVariableDeclaration(
-                    factory.createIdentifier("$_method"),
-                    undefined,
-                    undefined,
-                    node.expression,
-                  ),
-                ],
-                ts.NodeFlags.Const,
-              ),
-            ),
-            factory.createReturnStatement(
-              factory.createCallExpression(
-                factory.createIdentifier("$_obu_log"),
-                undefined,
-                [
-                  factory.createIdentifier("undefined"),
-                  factory.createIdentifier("$_method"),
+        factory.createBlock([
+          factory.createVariableStatement(
+            [],
+            factory.createVariableDeclarationList(
+              [
+                factory.createVariableDeclaration(
                   factory.createIdentifier("$_args"),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+                  undefined,
+                  undefined,
+                  factory.createArrayLiteralExpression([...node.arguments])
+                ),
+                factory.createVariableDeclaration(
+                  factory.createIdentifier("$_method"),
+                  undefined,
+                  undefined,
+                  node.expression
+                ),
+              ],
+              ts.NodeFlags.Const
+            )
+          ),
+          factory.createReturnStatement(
+            factory.createCallExpression(factory.createIdentifier("$_obu_log"), undefined, [
+              factory.createIdentifier("undefined"),
+              factory.createIdentifier("$_method"),
+              factory.createIdentifier("$_args"),
+            ])
+          ),
+        ])
+      )
     ),
     undefined,
-    [],
+    []
   );
 };
 
@@ -227,13 +210,15 @@ function transformSourceFile(sourceFile: ts.SourceFile) {
   return ts.visitNode(sourceFile, transformNode);
 }
 
+const injectedSource = fs
+  .readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "injected.js"), { encoding: "utf-8" })
+  .replace("export {};", "")
+  .replaceAll(/\/\/.*?$/gm, "")
+  .replaceAll(/\s{2,}/gm, " ")
+  .replace(/^\s*/, "");
+
 const instrumentSource = (src: string): string => {
-  const sourceFile = ts.createSourceFile(
-    "temp.ts",
-    src,
-    ts.ScriptTarget.Latest,
-    true,
-  );
+  const sourceFile = ts.createSourceFile("temp.ts", src, ts.ScriptTarget.Latest, true);
 
   const result = transformSourceFile(sourceFile);
   if (result === undefined) {
@@ -241,81 +226,9 @@ const instrumentSource = (src: string): string => {
   }
 
   const printer = ts.createPrinter();
-  const newCode = printer.printNode(
-    ts.EmitHint.Unspecified,
-    result,
-    sourceFile,
-  );
+  const newCode = printer.printNode(ts.EmitHint.Unspecified, result, sourceFile);
 
-  const logFunction = `
-    (() => {
-      const obu_context = Symbol.for("[[obu_context]]");
-      const obu_constructed = Symbol.for("[[obu_constructed]]");
-      const appendFileSync = require("node:fs").appendFileSync;
-      const logFile = \`./logs/cryptoLog.log\`;
-
-      let $_obu_counter = 0;
-
-      globalThis['$_obu_log'] = function(obj, method, args) {
-        const ctx = method?.[obu_context];
-        if (ctx) {
-          const isConstructor = ctx.length === 3 && ctx[2] === true;
-          const id = isConstructor ? $_obu_counter++ : null;
-          try {
-            appendFileSync(logFile, JSON.stringify({
-              id,
-              type: isConstructor ? "constructor" : "function",
-              fn: ctx[1],
-              objName: ctx[1],
-              target: ctx[0],
-              args,
-            }) + "\\n");
-          } catch {}
-          const ret = method.apply(obj, args);
-          if (isConstructor && ret !== undefined && ret !== null && typeof ret === "object") {
-            ret[obu_constructed] = id;
-          }
-          return ret;
-        } else {
-          const constructed = obj?.[obu_constructed];
-          if(constructed !== undefined) {
-            try {
-              appendFileSync(logFile, JSON.stringify({
-                id: constructed,
-                type: "function",
-                fn: method.name,
-                target: obj,
-                args,
-              }) + "\\n");
-            } catch {}
-          }
-          return (obj !== undefined && obj !== null) ? method.apply(obj, args) : method(...args);
-        }
-      };
-
-      function $_obu_mark(obj, context, name) {
-        if (obj !== null && obj !== undefined && (typeof obj === "object" || typeof obj === "function") && !Object.hasOwn(obj, obu_context)) {
-          obj[obu_context] = [context, name];
-          for (const k in obj) {
-            if (k != obu_context) {
-              $_obu_mark(obj[k], context, k);
-            }
-          }
-        }
-      }
-
-      const _crypto = require("crypto");
-      $_obu_mark(_crypto, "crypto", undefined);
-      const cryptoConstructors = ["createCipheriv", "createDecipheriv", "createHash", "pbkdf2"];
-      for (const ctor of cryptoConstructors) {
-        _crypto[ctor][obu_context].push(true);
-      }
-    })();
-  `
-    .replace(/^\s*/, "")
-    .replaceAll(/\s{2,}/gm, " ");
-
-  return logFunction + newCode;
+  return injectedSource + newCode;
 };
 
 export async function load(
@@ -334,7 +247,7 @@ export async function load(
     r.source = fs.readFileSync(filePath, "utf-8");
   }
 
-  if (r.source && url.endsWith('.js')) {
+  if (r.source && url.endsWith(".js")) {
     try {
       const sourceCode = r.source.toString();
 
@@ -347,10 +260,7 @@ export async function load(
       r.source = newSource;
       r.shortCircuit = true;
     } catch (error) {
-      console.error(
-        "Error parsing or processing the TypeScript code:",
-        error,
-      );
+      console.error("Error parsing or processing the TypeScript code:", error);
       throw error;
     }
   } else {
@@ -358,4 +268,4 @@ export async function load(
   }
 
   return r;
-};
+}
