@@ -4,8 +4,9 @@
   "author": "PBR @ UCLA",
   "license": "MIT",
   "description": "",
+  "type": "module",
   "scripts": {
-    "dev": "node --experimental-loader ./dist/index.js ./dist/playground.js",
+    "dev": "node --import ./dist/index.js ./dist/tests/playground.js",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "fmt": "prettier --cache --write ."

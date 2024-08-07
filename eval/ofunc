@@ -14,7 +14,7 @@ logfile=logs/ofunc/$testcase.log
 mkdir -p "$(dirname "$logfile")"
 
 # run
-node --experimental-loader $ofunc/dist/index.js $testfile 2>&1 | tee logs/ofunc/$testcase.stdout.log
+node --import $ofunc/dist/index.js $testfile 2>&1 | tee logs/ofunc/$testcase.stdout.log
 
 mv -T logs/cryptoLog.log $logfile
 

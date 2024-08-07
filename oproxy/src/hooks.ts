@@ -24,6 +24,12 @@ export async function resolve(specifier: any, context: any, nextResolve: any) {
   return nextResolve(specifier);
 };
 
+interface LoadContext {
+  conditions: string[];
+  format: string | null | undefined;
+  importAttributes: object;
+}
+
 interface LoadReturn {
   format: string;
   shortCircuit: boolean | undefined;
@@ -45,12 +51,8 @@ interface LoadReturn {
 
 export async function load(
   url: string,
-  context: {
-    conditions: string[];
-    format: string | null | undefined;
-    importAttributes: object;
-  },
-  nextLoad: (url: string, context: object) => Promise<LoadReturn>
+  context: LoadContext,
+  nextLoad: (url: string, context: LoadContext) => Promise<LoadReturn>
 ): Promise<LoadReturn> {
   // Take a resolved URL and return the source code to be evaluated.
   const r = await nextLoad(url, context);
