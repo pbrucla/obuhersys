@@ -75,7 +75,7 @@ const constructors: Record<string, any> = {
 
 
 function log(text: string) {
-  console.log(text);
+  // console.log(text);
   fs.appendFileSync(logFile, text+"\n");
 }
 

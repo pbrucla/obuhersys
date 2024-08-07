@@ -55,6 +55,11 @@ export async function load(
   // Take a resolved URL and return the source code to be evaluated.
   const r = await nextLoad(url, context);
 
+  // only process js/cjs files
+  if (!(url.endsWith('.js') || url.endsWith('.cjs'))) {
+    return r;
+  }
+
   if (!r.source && url.startsWith('file://')) {
     const filePath = fileURLToPath(url);
     r.source = fs.readFileSync(filePath, 'utf-8');
