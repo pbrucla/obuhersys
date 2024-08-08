@@ -1,6 +1,6 @@
-# OProxy
+# OCheck
 
-Obuhersys using Proxies to track method calls.
+Log processor and API misuse ruleset enforcer for Obuhersys.
 
 ## Usage
 

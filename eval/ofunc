@@ -8,6 +8,7 @@ key=$OBU_KEY
 
 oproxy="../oproxy"
 ofunc="../ofunc"
+ocheck="../ocheck"
 
 # ofunc outputs intermediate logs to a logs/ folder
 logfile=logs/ofunc/$testcase.log
@@ -18,4 +19,4 @@ node --import $ofunc/dist/index.js $testfile 2>&1 | tee logs/ofunc/$testcase.std
 
 mv -T logs/cryptoLog.log $logfile
 
-node $oproxy/dist/log/index.js -c $oproxy/src/tests/checks.js $logfile > >(tee -a logs/ofunc/$testcase.checker.log) 2> >(tee -a logs/ofunc/$testcase.checker.log >&2)
+node $ocheck/dist/index.js -c $ocheck/dist/checks.js $logfile > >(tee -a logs/ofunc/$testcase.checker.log) 2> >(tee -a logs/ofunc/$testcase.checker.log >&2)

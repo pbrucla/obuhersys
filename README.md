@@ -8,7 +8,7 @@ It features two methods to dynamically log API misuses at runtime with low overh
 - [ofunc](ofunc/), which inject logging calls by doing AST transformations on the source code, and
 - [oproxy](oproxy/), which inject logging calls by wrapping the Node Standard Library using JavaScript's Proxy class
 
-The output of either logger can then be run through our [checker](oproxy/src/log/index.ts) and [ruleset](oproxy/src/tests/checks.js) to report any API misuses!
+The output of either logger can then be run through our [checker](ocheck/src/index.ts) and [ruleset](ocheck/src/checks.js) to report any API misuses!
 
 It also features a [benchmark for cryptographic API misuse detection in NodeJS](dataset/) which is a port of the wonderful [CamBench Analysis Capabilities benchmark](https://github.com/CROSSINGTUD/CamBench/tree/main/CamBench_Cap) written for Java.
 
@@ -20,20 +20,21 @@ First, clone the repository
 ```shell
 gh repo clone pbrucla/obuhersys
 cd obuhersys
+pnpm install
 ```
 
 Next, build each subproject
 
 ```shell
-cd oproxy && pnpm install && pnpm build
-cd ofunc && pnpm install && pnpm build
+pnpm build
 
 # shell variables to be used later
 export oproxy=$(realpath oproxy/)
 export ofunc=$(realpath ofunc/)
+export ocheck=$(realpath ocheck/)
 ```
 
-Ensure you are using node v20
+Ensure you are using node v20 or higher
 ```shell
 nvm use 20
 ```
@@ -61,7 +62,7 @@ node --import $ofunc/dist/index.js yourentrypoint.js
 After running the dynamic analysis, a logfile will be created in `logs/` to analyze.
 Below command will analyze the log and output violations found:
 ```shell
-node $oproxy/dist/log/index.js -c $oproxy/src/tests/checks.js <your log file>
+node $ocheck/dist/index.js -c $ocheck/dist/checks.js <your log file>
 ```
 
 ## Developers

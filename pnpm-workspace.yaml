@@ -1,0 +1,4 @@
+packages:
+  - ocheck
+  - ofunc
+  - oproxy

@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "lib": ["ESNext", "ES2021.WeakRef"],
+    "types": ["node"],
+    "target": "esnext",
+    "module": "NodeNext",
+    "strict": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "importHelpers": true,
+    "downlevelIteration": false,
+    "rootDir": "src",
+    "outDir": "./dist",
+    "allowJs": true
+  },
+  "include": ["src/*.ts", "src/*.js"]
+}

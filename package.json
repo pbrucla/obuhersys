@@ -1,0 +1,19 @@
+{
+  "name": "obuhersys",
+  "version": "1.0.0",
+  "author": "PBR @ UCLA",
+  "license": "MIT",
+  "description": "",
+  "scripts": {
+    "build": "concurrently -c yellow,magentaBright,blueBright -n ofunc,oproxy,ocheck \"cd ofunc && pnpm build\" \"cd oproxy && pnpm build\" \"cd ocheck && pnpm build\"",
+    "build:watch": "concurrently -c yellow,magentaBright,blueBright -n ofunc,oproxy,ocheck \"cd ofunc && pnpm build:watch\" \"cd oproxy && pnpm build:watch\" \"cd ocheck && pnpm build:watch\"",
+    "fmt": "concurrently -c yellow,magentaBright,blueBright -n ofunc,oproxy,ocheck \"cd ofunc && pnpm fmt\" \"cd oproxy && pnpm fmt\" \"cd ocheck && pnpm fmt\""
+  },
+  "dependencies": {
+    "node": "^18.20.4"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "packageManager": "pnpm@9.5.0"
+}

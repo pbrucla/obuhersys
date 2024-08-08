@@ -1,25 +1,21 @@
 {
-  "name": "obuhersys-proxy",
+  "name": "obuhersys-check",
   "version": "1.0.0",
   "author": "PBR @ UCLA",
   "license": "MIT",
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "node --enable-source-maps --import ./dist/index.js ./dist/tests/playgroundLoggerTest.js",
-    "build": "tsc --build --force",
-    "build:watch": "tsc --build --watch",
+    "dev": "node --import ./dist/index.js",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
     "fmt": "prettier --cache --write ."
   },
   "dependencies": {
-    "acorn": "^8.12.1",
-    "acorn-walk": "^8.3.3",
-    "estree-util-attach-comments": "^3.0.0",
-    "estree-util-to-js": "^2.0.0",
-    "source-map": "^0.7.4"
+    "node": "^18.20.4",
+    "commander": "^12.1.0"
   },
   "devDependencies": {
-    "@types/estree": "^1.0.5",
     "@types/node": "^20.14.10",
     "prettier": "^2.8.8",
     "ts-node": "^10.9.2",
