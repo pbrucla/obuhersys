@@ -1,6 +1,6 @@
 # Obuhersys: Dynamic Analysis of Cryptographic API Misuse in NodeJS
 
-_to be published in [MIT URTC 2024](https://urtc.mit.edu/)_
+<!-- _to be published in [MIT URTC 2024](https://urtc.mit.edu/)_ -->
 
 Obuhersys is a dynamic analysis framework for detecting cryptographic API misuses in NodeJS software.
 
